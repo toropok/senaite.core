@@ -24,6 +24,7 @@ from Acquisition import aq_parent
 from bika.lims import api
 from bika.lims.api import UID_CATALOG
 from bika.lims.api.snapshot import disable_snapshots
+from bika.lims.interfaces.analysis import IRequestAnalysis
 from bika.lims.utils import tmpID
 from plone.dexterity.fti import DexterityFTI
 from plone.dexterity.utils import createContent
@@ -60,7 +61,6 @@ from senaite.core.schema.addressfield import BILLING_ADDRESS
 from senaite.core.schema.addressfield import PHYSICAL_ADDRESS
 from senaite.core.schema.addressfield import POSTAL_ADDRESS
 from zope.component import getMultiAdapter
-from bika.lims.interfaces.analysis import IRequestAnalysis
 
 version = "2.6.0"  # Remember version number in metadata.xml and setup.py
 profile = "profile-{0}:default".format(product)

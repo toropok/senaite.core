@@ -4,6 +4,7 @@ Changelog
 2.6.0 (unreleased)
 ------------------
 
+- #2569 Fix samples are indicated as late when Turnaround Time is zero
 - #2636 Fix JS Error in WS Template edit form
 - #2635 Remove reindexing of Analyses and Analysis Services on Category change
 - #2599 Migrate WorksheetTemplates to Dexterity
@@ -18,7 +19,6 @@ Changelog
 - #2625 Fix sizing of listing widgets
 - #2621 Fix UnicodeDecodeError when render non-latin email template
 - #2623 Fix inactive services are added via profile on sample creation/edition
-- #2569 Fix samples are indicated as late when Turnaround Time is zero
 - #2620 Support IAddSampleObjectInfo adapter for sample's Template field
 - #2619 Fix analysis categories are not sorted by sort key
 - #2618 Fix UnicodeDecodeError when user linked to a contact with special chars

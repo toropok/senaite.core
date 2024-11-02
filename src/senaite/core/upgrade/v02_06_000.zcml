@@ -4,8 +4,8 @@
     i18n_domain="senaite.core">
 
    <genericsetup:upgradeStep
-      title="SENAITE.CORE 2.6.0: Reindex getDueDate index from analyses and setup catalog"
-      description="Reindex getDuedate in analyses and sample catalog"
+      title="SENAITE.CORE 2.6.0: Reindex getDueDate"
+      description="Reindex getDueDate from analyses and sample catalogs"
       source="2653"
       destination="2654"
       handler=".v02_06_000.reindex_getDueDate"
