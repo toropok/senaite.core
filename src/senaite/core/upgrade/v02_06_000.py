@@ -2091,8 +2091,7 @@ def reindex_getDueDate(tool):
             obj.reindexObject(idxs=['getDueDate'])
             sample = obj.getRequest()
             sample_uid = api.get_uid(sample)
-            if sample_uid not in sample_uids:
-                sample_uids.add(sample_uid)
+            sample_uids.add(sample_uid)
         obj._p_deactivate()
     logger.info("Reindexing getDueDate index from analyses catalog [DONE]")
 
