@@ -2069,6 +2069,7 @@ def migrate_sampletypes_to_dx(tool):
 
     logger.info("Convert SampleTypes to Dexterity [DONE]")
 
+
 def reindex_getDueDate(tool):
     """Reindex the getDueDate index from analyses and setup catalog
     """
@@ -2106,6 +2107,7 @@ def reindex_getDueDate(tool):
         obj.reindexObject(idxs=['getDueDate'])
         obj._p_deactivate()
     logger.info("Reindexing getDueDate index from samples catalog [DONE]")
+
 
 def update_content_actions(tool):
     logger.info("Update content actions ...")
