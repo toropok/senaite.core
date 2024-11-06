@@ -222,7 +222,7 @@ class ICalculationSchema(model.Schema):
 
 @implementer(ICalculation, ICalculationSchema, IDeactivable)
 class Calculation(Container):
-    """AnalysisProfile
+    """Calculation
     """
     # Catalogs where this type will be catalogued
     _catalogs = [SETUP_CATALOG]
