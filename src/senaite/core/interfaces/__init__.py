@@ -490,6 +490,16 @@ class ISampleTypes(Interface):
     """
 
 
+class IWorksheetTemplates(Interface):
+    """Marker interface for Worksheet Templates
+    """
+
+
+class IWorksheetTemplate(Interface):
+    """Marker interface for Worksheet Template
+    """
+
+
 class ICalculation(Interface):
     """Marker interface for calculation
     """

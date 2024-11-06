@@ -4,6 +4,23 @@ Changelog
 2.6.0 (unreleased)
 ------------------
 
+- #2639 Fix sampletype-related indexes for AnalysisSpec type are not indexed
+- #2638 Fix AttributeError on upgrade step 2654 (reindex_getDueDate)
+- #2569 Fix samples are indicated as late when Turnaround Time is zero
+- #2636 Fix JS Error in WS Template edit form
+- #2635 Remove reindexing of Analyses and Analysis Services on Category change
+- #2599 Migrate WorksheetTemplates to Dexterity
+- #2632 Refactor Catalog Indexing
+- #2630 Fix references from sample templates are not kept when partitioning
+- #2634 Pin et-xmlfile to a Python 2 compatible version
+- #2631 Fix for sending email attachment if filename contain spaces
+- #2633 Fix DateTimeError when using API's to_DT and to_dt functions
+- #2629 Fix default sticker template based on sample type is not rendered
+- #2627 Skip workflow transition for temporary analyses
+- #2626 Change to new instrument imports that were introduced with #2555
+- #2625 Fix sizing of listing widgets
+- #2621 Fix UnicodeDecodeError when render non-latin email template
+- #2623 Fix inactive services are added via profile on sample creation/edition
 - #2620 Support IAddSampleObjectInfo adapter for sample's Template field
 - #2619 Fix analysis categories are not sorted by sort key
 - #2618 Fix UnicodeDecodeError when user linked to a contact with special chars

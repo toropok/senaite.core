@@ -31,6 +31,25 @@ SAMPLE_PRESERVATION_CATEGORIES = (
     )),
 )
 
+ANALYSIS_TYPES = (
+    ("a", _(
+        u"analysis_type_analysis",
+        default=u"Analysis"
+    )),
+    ("b", _(
+        u"analysis_type_blank",
+        default=u"Blank"
+    )),
+    ("c", _(
+        u"analysis_type_control",
+        default=u"Control"
+    )),
+    ("d", _(
+        u"analysis_type_duplicate",
+        default=u"Duplicate"
+    )),
+)
+
 RESULT_TYPES = (
     ("numeric", _("Numeric")),
     ("string", _("String")),

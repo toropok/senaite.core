@@ -104,6 +104,10 @@
   <object name="SampleType" meta_type="Dexterity FTI" />
   <object name="SampleTypes" meta_type="Dexterity FTI" />
 
+  <!-- Worksheet Templates -->
+  <object name="WorksheetTemplate" meta_type="Dexterity FTI" />
+  <object name="WorksheetTemplates" meta_type="Dexterity FTI" />
+
   <!-- Calculations -->
   <object name="Calculation" meta_type="Dexterity FTI" />
   <object name="Calculations" meta_type="Dexterity FTI" />

@@ -6,9 +6,41 @@
    <genericsetup:upgradeStep
       title="SENAITE.CORE 2.6.0: Move Calculations to Senaite setup"
       description="Migrate Calculations to Senaite setup"
+      source="2655"
+      destination="2656"
+      handler=".v02_06_000.migrate_calculations_to_dx"
+      profile="senaite.core:default"/>
+
+  <genericsetup:upgradeStep
+      title="SENAITE.CORE 2.6.0: Fix sampletype-related indexes for specs"
+      description="SampleType-specific indexes Analysis Specs are not indexed"
+      source="2654"
+      destination="2655"
+      handler=".v02_06_000.reindex_specs"
+      profile="senaite.core:default"/>
+
+  <genericsetup:upgradeStep
+      title="SENAITE.CORE 2.6.0: Reindex getDueDate"
+      description="Reindex getDueDate from analyses and sample catalogs"
+      source="2653"
+      destination="2654"
+      handler=".v02_06_000.reindex_getDueDate"
+      profile="senaite.core:default"/>
+
+  <genericsetup:upgradeStep
+      title="SENAITE.CORE 2.6.0: Migrate WorksheetTemplates to DX"
+      description="Migrate WorksheetTemplates to Dexterity"
+      source="2652"
+      destination="2653"
+      handler=".v02_06_000.migrate_worksheettemplates_to_dx"
+      profile="senaite.core:default"/>
+
+  <genericsetup:upgradeStep
+      title="SENAITE.CORE 2.6.0: Remove deactivated services from profiles"
+      description="Removes deactivated analysis services from Profiles"
       source="2651"
       destination="2652"
-      handler=".v02_06_000.migrate_calculations_to_dx"
+      handler=".v02_06_000.remove_inactive_services_from_profiles"
       profile="senaite.core:default"/>
 
   <genericsetup:upgradeStep
