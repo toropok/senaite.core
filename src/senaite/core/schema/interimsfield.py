@@ -19,6 +19,7 @@
 # Some rights reserved, see README and LICENSE.
 
 from bika.lims import senaiteMessageFactory as _
+from plone.autoform import directives
 from senaite.core.schema.fields import DataGridField
 from senaite.core.schema.fields import DataGridRow
 from senaite.core.schema.interfaces import IInterimsField
@@ -27,22 +28,9 @@ from zope.interface import implementer
 from zope.interface import Interface
 
 
-DEFAULT_EMPTY_INTERIM_ROW = {
-    "keyword": u"",
-    "title": u"",
-    "value": u"",
-    "choices": u"",
-    "result_type": "numeric",
-    "allow_empty": False,
-    "unit": u"",
-    "report": False,
-    "hidden": False,
-    "apply_wide": False,
-}
-
-
 class IInterimRow(Interface):
 
+    directives.widget("keyword", style=u"width: 150px!important;")
     keyword = schema.TextLine(
         title=_(
             u"label_interim_keyword",
@@ -52,6 +40,7 @@ class IInterimRow(Interface):
         default=u""
     )
 
+    directives.widget("title", style=u"width: 150px!important;")
     title = schema.TextLine(
         title=_(
             u"label_interim_title",
@@ -61,6 +50,7 @@ class IInterimRow(Interface):
         default=u""
     )
 
+    directives.widget("value", style=u"width: 150px!important;")
     value = schema.TextLine(
         title=_(
             u"label_interim_default_value",
@@ -70,6 +60,7 @@ class IInterimRow(Interface):
         default=u""
     )
 
+    directives.widget("choices", style=u"width: 150px!important;")
     choices = schema.TextLine(
         title=_(
             u"label_interim_choices",
@@ -89,6 +80,7 @@ class IInterimRow(Interface):
         required=False,
     )
 
+    directives.widget("allow_empty", klass="hide-title")
     allow_empty = schema.Bool(
         title=_(
             u"label_interim_allow_empty",
@@ -98,6 +90,7 @@ class IInterimRow(Interface):
         default=False
     )
 
+    directives.widget("unit", style=u"width: 50px!important;")
     unit = schema.TextLine(
         title=_(
             u"label_interim_unit",
@@ -107,6 +100,7 @@ class IInterimRow(Interface):
         default=u""
     )
 
+    directives.widget("report", klass="hide-title")
     report = schema.Bool(
         title=_(
             u"label_interim_report",
@@ -116,6 +110,7 @@ class IInterimRow(Interface):
         default=False
     )
 
+    directives.widget("hidden", klass="hide-title")
     hidden = schema.Bool(
         title=_(
             u"label_interim_hidden",
@@ -125,6 +120,7 @@ class IInterimRow(Interface):
         default=False
     )
 
+    directives.widget("apply_wide", klass="hide-title")
     apply_wide = schema.Bool(
         title=_(
             u"label_interim_apply_wide",
@@ -142,5 +138,5 @@ class InterimsField(DataGridField):
 
     def __init__(self, **kwargs):
         default = kwargs.get("default")
-        kwargs["default"] = default or [DEFAULT_EMPTY_INTERIM_ROW]
+        kwargs["default"] = default or []
         super(InterimsField, self).__init__(**kwargs)
