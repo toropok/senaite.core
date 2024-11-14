@@ -153,3 +153,8 @@ input.hide-title {
         display: none;
     }
 }
+
+span.options:has(> input.hide-title) {
+    display: flex;
+    justify-content: center;
+}

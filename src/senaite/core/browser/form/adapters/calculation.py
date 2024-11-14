@@ -18,7 +18,28 @@
 # Copyright 2018-2024 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
+import re
+
+from bika.lims import api
+from bika.lims import logger
+from bika.lims import senaiteMessageFactory as _
 from senaite.core.browser.form.adapters import EditFormAdapterBase
+from senaite.core.catalog import SETUP_CATALOG
+from senaite.core.content.calculation import calculation_formula
+from senaite.core.i18n import translate
+
+interim_keyword_regex = re.compile(r"interims\.(\d+)\.widgets\.keyword$")
+imports_module_regex = re.compile(r"imports\.(\d+)\.widgets\.module$")
+test_keyword_regex = re.compile(r"test_parameters\.(\d+)\.widgets\.keyword$")
+test_value_regex = re.compile(r"test_parameters\.(\d+)\.widgets\.value$")
+formula_regex = re.compile(r"\[[^\]]*\]")
+
+FIELD_FORMULA = "form.widgets.formula"
+FIELD_TEST_RESULT = "form.widgets.test_result"
+FIELD_TEST_KEYWORD = "form.widgets.test_parameters.{}.widgets.keyword"
+FIELD_TEST_VALUE = "form.widgets.test_parameters.{}.widgets.value"
+FIELD_IMPORTS_FUNC = "form.widgets.imports.{}.widgets.function"
+FIELD_INTERIM_VALUE = "form.widgets.interims.{}.widgets.value"
 
 
 class EditForm(EditFormAdapterBase):
@@ -26,9 +47,144 @@ class EditForm(EditFormAdapterBase):
     """
 
     def initialized(self, data):
-        self.add_hide_field("cmfeditions_version_comment")
-        self.add_hide_field("TestResult")
+        self.add_callback("body", 
+                          "update_test_parameters", 
+                          "update_test_parameters")
         return self.data
 
     def modified(self, data):
+        name = data.get("name")
+        value = data.get("value")
+
+        # test_keyword_match = test_keyword_regex.search(name) 
+        test_value_match = test_value_regex.search(name)
+        # test_param_match = test_keyword_match or test_value_match
+
+        if test_value_match:
+            self.calculate_result(data)
+        elif name == FIELD_FORMULA:
+            keywords = self.processing_keywords(data)
+            self.add_update_field("form.widgets.raw_test_keywords", 
+                                  ",".join(keywords.keys()))
+
         return self.data
+    
+    def callback(self, data):
+        name = data.get("name")
+        if not name:
+            return
+        method = getattr(self, name, None)
+        if not callable(method):
+            return
+        return method(data)
+    
+    def calculate_result(self, data, parameters=None, imports=None):
+        form = data.get("form")
+        formula = " ".join(form.get(FIELD_FORMULA, "").splitlines())
+        if parameters is None:
+            parameters = self.get_test_keywords(data)
+        if imports is None:
+            imports = self.get_imports(data)
+
+        success, result = calculation_formula(formula, parameters, imports)
+        self.add_update_field(FIELD_TEST_RESULT, result)
+        return self.data
+
+    def processing_keywords(self, data):
+        interim_keywords = self.get_interim_keywords(data)
+        formula_keywords = self.get_formula_keywords(data, interim_keywords)
+        test_keywords = self.get_test_keywords(data)
+        return self.update_keywords_value(formula_keywords, test_keywords)
+
+    def update_keywords_value(self, formula_keywords, test_keywords):
+        for kw in formula_keywords.keys():
+            if kw in test_keywords.keys():
+                formula_keywords[kw] = test_keywords.get(kw)
+        return formula_keywords        
+
+    def update_test_parameters(self, data):
+        keywords = self.processing_keywords(data)
+        items = keywords.items()
+        kws = []
+        for index, item in enumerate(items):
+            kws.append(item[0])
+            self.add_update_field(FIELD_TEST_KEYWORD.format(index), item[0])
+            self.add_update_field(FIELD_TEST_VALUE.format(index), item[1])
+        imports = self.get_imports(data)
+        self.calculate_result(data, parameters=keywords, imports=imports)
+        return self.data
+    
+    def get_formula_keywords(self, data, interim_keywords):
+        form = data.get("form")
+        formula = form.get(FIELD_FORMULA, "")
+        formula_keywords = self.parsing_formula(formula)
+        result_keywords = {}
+        nf_keywords = []
+        interim_keys = interim_keywords.keys()
+        for kw in formula_keywords:
+            value = interim_keywords.get(kw, "")
+            if kw in interim_keys or self.check_keyword(kw):
+                result_keywords.update({kw: value})
+            else:
+                nf_keywords.append(kw)
+
+        error_msg = ""
+        if nf_keywords:
+            error_msg = translate(_(
+                u"keyword_not_found",
+                default=u"Not found Analysis Services by keywords: ${kws}.",
+                mapping={"kws": ", ".join(nf_keywords)}))
+        self.add_error_field(FIELD_FORMULA, error_msg)
+
+        return result_keywords
+    
+    def get_interim_keywords(self, data):
+        form = data.get("form")
+        keywords = {}
+        for k, v in form.items():
+            interim_match = interim_keyword_regex.search(k)
+            if interim_match:
+                idx = interim_match.group(1)
+                value = form.get(FIELD_INTERIM_VALUE.format(idx))
+                keywords.update({v: value})
+        return keywords
+    
+    def parsing_formula(self, formula):
+        keywords = formula_regex.findall(formula)
+        return set(map(lambda kw: re.sub('[\[\]]', '', kw), keywords))
+    
+    def get_test_keywords(self, data):
+        form = data.get("form")
+        keywords = {}
+        for k, v in form.items():
+            test_match = test_keyword_regex.search(k)
+            if test_match:
+                idx = test_match.group(1)
+                value = form.get(FIELD_TEST_VALUE.format(idx))
+                keywords.update({v: value})
+        return keywords
+
+    def get_imports(self, data):
+        form = data.get("form")
+        imports = []
+        for k, v in form.items():
+            module_match = imports_module_regex.search(k)
+            if module_match:
+                idx = module_match.group(1)
+                imports.append({
+                    "module": v,
+                    "function": form.get(FIELD_IMPORTS_FUNC.format(idx)),
+                })
+        return imports
+    
+    def check_keyword(self, keyword):
+        query = {
+            "portal_type": "AnalysisService",
+            "getKeyword": keyword,
+        }
+        return len(api.search(query, SETUP_CATALOG)) > 0
+    
+    def get_count_test_rows(self, data):
+        form = data.get("form")
+        positions = [k for k in form.keys() if test_keyword_regex.search(k)]
+        return len(positions)

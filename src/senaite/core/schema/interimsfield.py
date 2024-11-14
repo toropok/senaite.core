@@ -18,8 +18,10 @@
 # Copyright 2018-2024 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
-from bika.lims import senaiteMessageFactory as _
 from plone.autoform import directives
+
+from bika.lims import senaiteMessageFactory as _
+
 from senaite.core.schema.fields import DataGridField
 from senaite.core.schema.fields import DataGridRow
 from senaite.core.schema.interfaces import IInterimsField

@@ -25,6 +25,7 @@ import re
 
 from AccessControl import ClassSecurityInfo
 from bika.lims import api
+from bika.lims import logger
 from bika.lims import senaiteMessageFactory as _
 from bika.lims.interfaces import IDeactivable
 from plone.autoform import directives
@@ -37,14 +38,111 @@ from senaite.core.interfaces import ICalculation
 from senaite.core.schema.fields import DataGridField
 from senaite.core.schema.fields import DataGridRow
 from senaite.core.schema.interimsfield import InterimsField
+from senaite.core.validators.interimsfield import InterimsFieldValidator
+from senaite.core.validators.interimsfield import InterimsFieldValidationErrorView
 from senaite.core.schema.uidreferencefield import get_backrefs
 from senaite.core.schema.uidreferencefield import UIDReferenceField
 from senaite.core.z3cform.widgets.datagrid import DataGridWidgetFactory
+from zope import component
 from zope import schema
+from z3c.form import error
+from z3c.form import validator
 from z3c.form.interfaces import IAddForm
 from z3c.form.interfaces import IEditForm
-from zope.interface import Interface
 from zope.interface import implementer
+from zope.interface import Interface
+
+
+def calculation_formula(formula, parameters, imports):
+    formula = formula.replace("[", "{").replace("]", "}").replace("  ", "")
+    success = False
+    result = "Failure"
+
+    try:
+        formula = formula.format(**parameters)
+        result = eval(formula, _getGlobals(imports))
+        success = True
+    except TypeError as e:
+        # non-numeric arguments in interim mapping?
+        result = "TypeError: {}".format(str(e.args[0]))
+    except ZeroDivisionError as e:
+        result = "Division by 0: {}".format(str(e.args[0]))
+    except KeyError as e:
+        result = "Key Error: {}".format(str(e.args[0]))
+    except ImportError as e:
+        result = "Import Error: {}".format(str(e.args[0]))
+    except Exception as e:
+        result = "Unspecified exception: {}".format(str(e.args[0]))
+    
+    return success, result
+
+
+def _getGlobals(imports, **kwargs):
+    """Return the globals dictionary for the formula calculation
+    """
+    # Default globals
+    globs = {
+        "__builtins__": None,
+        "all": all,
+        "any": any,
+        "bool": bool,
+        "chr": chr,
+        "cmp": cmp,
+        "complex": complex,
+        "divmod": divmod,
+        "enumerate": enumerate,
+        "float": float,
+        "format": format,
+        "frozenset": frozenset,
+        "hex": hex,
+        "int": int,
+        "len": len,
+        "list": list,
+        "long": long,
+        "math": math,
+        "max": max,
+        "min": min,
+        "oct": oct,
+        "ord": ord,
+        "pow": pow,
+        "range": range,
+        "reversed": reversed,
+        "round": round,
+        "str": str,
+        "sum": sum,
+        "tuple": tuple,
+        "xrange": xrange,
+    }
+    # Update with keyword arguments
+    globs.update(kwargs)
+    # Update with additional Python libraries
+    for imp in imports:
+        mod = imp["module"]
+        func = imp["function"]
+        member = _getModuleMember(mod, func)
+        if member is None:
+            raise ImportError(
+                "Could not find member {} of module {}".format(
+                    func, mod))
+        globs[func] = member
+    return globs
+
+def _getModuleMember(dotted_name, member):
+    """Get the member object of a module.
+
+    :param dotted_name: The dotted name of the module, e.g. 'scipy.special'
+    :type dotted_name: string
+    :param member: The name of the member function, e.g. 'gammaincinv'
+    :type member: string
+    :returns: member object or None
+    """
+    try:
+        mod = importlib.import_module(dotted_name)
+    except ImportError:
+        return None
+
+    members = dict(inspect.getmembers(mod))
+    return members.get(member)
 
 
 class IImportRecord(Interface):
@@ -68,7 +166,7 @@ class ITestParameterRecord(Interface):
     """Record schema for python test params
     """
 
-    directives.widget("keyword", disabled="disabled")
+    directives.widget("keyword", style=u"max-width: 120px;")
     keyword = schema.TextLine(
         title=_(
             u"label_calculation_test_param_keyword",
@@ -77,13 +175,14 @@ class ITestParameterRecord(Interface):
         required=False,
         default=u"")
 
+    directives.widget("value", style=u"max-width: 100px;")
     value = schema.TextLine(
         title=_(
             u"label_calculation_test_param_value",
             default=u"Value"
         ),
         required=False,
-        default=u"0")
+        default=u"")
 
 
 class ICalculationSchema(model.Schema):
@@ -112,7 +211,7 @@ class ICalculationSchema(model.Schema):
         allow_insert=True,
         allow_delete=True,
         allow_reorder=True,
-        auto_append=False)
+        auto_append=True)
     interims = InterimsField(
         title=_(u"label_calculation_interims",
                 default=u"Calculation Interim Fields"),
@@ -170,7 +269,7 @@ class ICalculationSchema(model.Schema):
                       u"in square brackets [ ].</p><p>E.g, the calculation "
                       u"for Total Hardness, the total of Calcium (ppm) and "
                       u"Magnesium (ppm) ions in water, is entered as [Ca] "
-                      u"+ [Mg], where Ca and MG are the keywords for "
+                      u"+ [Mg], where Ca and Mg are the keywords for "
                       u"those two Analysis Services.</p>"),
         required=True,
     )
@@ -181,7 +280,7 @@ class ICalculationSchema(model.Schema):
         allow_insert=False,
         allow_delete=False,
         allow_reorder=False,
-        auto_append=False)
+        auto_append=True)
     test_parameters = DataGridField(
         title=_(u"label_calculation_test_params",
                 default=u"Test Parameters"),
@@ -193,18 +292,25 @@ class ICalculationSchema(model.Schema):
                       u"calculate results."),
         value_type=DataGridRow(schema=ITestParameterRecord),
         required=False,
-        default=[{"keyword": u"", "value": u""}]
+        default=[]
     )
 
-    directives.omitted(IAddForm, 'test_result')
-    directives.omitted(IEditForm, 'test_result')
+    directives.mode(raw_test_keywords="hidden")
+    raw_test_keywords = schema.TextLine(
+        title=_(u"label_calculation_raw_test_keywords",
+                default=u"Raw Test Result"),
+        required=False,
+        default=u"",
+    )
+
+    # directives.omitted(IAddForm, 'test_result')
+    # directives.omitted(IEditForm, 'test_result')
     test_result = schema.TextLine(
         title=_(u"label_calculation_test_result",
                 default=u"Test Result"),
         description=_(u"description_calculation_test_result",
                       default=u"The result after the calculation has taken "
-                      u"place with test values.  You will need to save the "
-                      u"calculation before this value will be calculated.")
+                      u"place with test values.")
     )
 
     directives.mode(dependent_services='hidden')
@@ -433,7 +539,7 @@ class Calculation(Container):
     @security.protected(permissions.ModifyPortalContent)
     def setTestResult(self, value):
         """Calculate formula with TestParameters and enter result into
-         TestResult field.
+        TestResult field.
         """
         # Create mapping from TestParameters
         mapping = {x['keyword']: x['value'] for x in self.getTestParameters()}
@@ -445,24 +551,9 @@ class Calculation(Container):
         if not formula:
             mutator(self, "")
             return
-
-        formula = formula.replace('[', '{').replace(']', '}').replace('  ', '')
-        result = 'Failure'
-
-        try:
-            formula = formula.format(**mapping)
-            result = eval(formula, self._getGlobals())
-        except TypeError as e:
-            # non-numeric arguments in interim mapping?
-            result = "TypeError: {}".format(str(e.args[0]))
-        except ZeroDivisionError as e:
-            result = "Division by 0: {}".format(str(e.args[0]))
-        except KeyError as e:
-            result = "Key Error: {}".format(str(e.args[0]))
-        except ImportError as e:
-            result = "Import Error: {}".format(str(e.args[0]))
-        except Exception as e:
-            result = "Unspecified exception: {}".format(str(e.args[0]))
+        
+        imports = self.getPythonImports()
+        result = calculation_formula(formula, mapping, imports)
 
         mutator(self, str(result))
 
@@ -482,69 +573,16 @@ class Calculation(Container):
     # BBB: AT schema field property
     DependentServices = property(getDependentServices, setDependentServices)
 
-    def _getGlobals(self, **kwargs):
-        """Return the globals dictionary for the formula calculation
-        """
-        # Default globals
-        globs = {
-            "__builtins__": None,
-            "all": all,
-            "any": any,
-            "bool": bool,
-            "chr": chr,
-            "cmp": cmp,
-            "complex": complex,
-            "divmod": divmod,
-            "enumerate": enumerate,
-            "float": float,
-            "format": format,
-            "frozenset": frozenset,
-            "hex": hex,
-            "int": int,
-            "len": len,
-            "list": list,
-            "long": long,
-            "math": math,
-            "max": max,
-            "min": min,
-            "oct": oct,
-            "ord": ord,
-            "pow": pow,
-            "range": range,
-            "reversed": reversed,
-            "round": round,
-            "str": str,
-            "sum": sum,
-            "tuple": tuple,
-            "xrange": xrange,
-        }
-        # Update with keyword arguments
-        globs.update(kwargs)
-        # Update with additional Python libraries
-        for imp in self.getPythonImports():
-            mod = imp["module"]
-            func = imp["function"]
-            member = self._getModuleMember(mod, func)
-            if member is None:
-                raise ImportError(
-                    "Could not find member {} of module {}".format(
-                        func, mod))
-            globs[func] = member
-        return globs
 
-    def _getModuleMember(self, dotted_name, member):
-        """Get the member object of a module.
+validator.WidgetValidatorDiscriminators(
+    InterimsFieldValidator,
+    field=ICalculationSchema["interims"],
+)
+component.provideAdapter(InterimsFieldValidator)
 
-        :param dotted_name: The dotted name of the module, e.g. 'scipy.special'
-        :type dotted_name: string
-        :param member: The name of the member function, e.g. 'gammaincinv'
-        :type member: string
-        :returns: member object or None
-        """
-        try:
-            mod = importlib.import_module(dotted_name)
-        except ImportError:
-            return None
-
-        members = dict(inspect.getmembers(mod))
-        return members.get(member)
+error.ErrorViewDiscriminators(
+    InterimsFieldValidationErrorView,
+    error=error.MultipleErrors, 
+    field=ICalculationSchema["interims"],
+)
+component.provideAdapter(InterimsFieldValidationErrorView)

@@ -368,4 +368,13 @@
       permission="zope2.View"
       layer="senaite.core.interfaces.ISenaiteCore" />
 
+  <browser:viewlet
+        name="senaite.core.calculation.edit"
+        manager="plone.app.layout.viewlets.interfaces.IHtmlHead"
+        class=".resources.ResourcesViewlet"
+        permission="zope2.View"
+        template="templates/calculation_edit.pt"
+        layer="senaite.core.interfaces.ISenaiteCore"
+    />
+
 </configure>
