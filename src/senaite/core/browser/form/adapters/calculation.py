@@ -50,6 +50,12 @@ class EditForm(EditFormAdapterBase):
         self.add_callback("body", 
                           "update_test_parameters", 
                           "update_test_parameters")
+        self.add_callback("body", 
+                          "datagrid:row_added", 
+                          "update_form")
+        self.add_callback("body", 
+                          "datagrid:row_removed", 
+                          "update_form")
         return self.data
 
     def modified(self, data):
@@ -60,13 +66,12 @@ class EditForm(EditFormAdapterBase):
         test_value_match = test_value_regex.search(name)
         # test_param_match = test_keyword_match or test_value_match
 
-        if test_value_match:
-            self.calculate_result(data)
-        elif name == FIELD_FORMULA:
-            keywords = self.processing_keywords(data)
-            self.add_update_field("form.widgets.raw_test_keywords", 
-                                  ",".join(keywords.keys()))
-
+        # if test_value_match:
+        #    self.calculate_result(data)
+        #elif name == FIELD_FORMULA:
+        keywords = self.processing_keywords(data)
+        self.add_update_field("form.widgets.raw_test_keywords", 
+                              ",".join(keywords.keys()))
         return self.data
     
     def callback(self, data):
@@ -77,6 +82,12 @@ class EditForm(EditFormAdapterBase):
         if not callable(method):
             return
         return method(data)
+    
+    def update_form(self, data):
+        keywords = self.processing_keywords(data)
+        self.add_update_field("form.widgets.raw_test_keywords", 
+                              ",".join(keywords.keys()))
+        return self.data
     
     def calculate_result(self, data, parameters=None, imports=None):
         form = data.get("form")

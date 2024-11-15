@@ -120,20 +120,39 @@ def choices_and_restype_validator():
 
 
 def calcs_interims_validator(calcs):
+    """
+    any duplicated interimfield titles must share the same keyword
+    any duplicated interimfield keywords must share the same title
+    """
     def validate(row):
-        r_type = row.get("result_type", "")
-        choices = row.get("choices")
-        if not choices and r_type in TYPES_WITH_CHOICES:
-            return fail("choices_and_restype_validator",
+        keyword = row['keyword']
+        title = row['title']
+        dup_keyword_title = dup_title_keyword = None
+        for calc in calcs:
+            calc_interims = calc.getInterimFields()
+            for c in calc_interims:
+                if c['keyword'] == keyword and c['title'] != title:
+                    dup_keyword_title = c['title']
+                    break
+                if c['title'] == title and c['keyword'] != keyword:
+                    dup_title_keyword = c['keyword']
+                    break
+            else:
+                continue
+            break
+        if dup_keyword_title:
+            return fail("calcs_interims_validator",
                         translate(_(
-                                u"choices_and_restype_validator_no_choices_error",
-                                default=u"Control type is not supported for empty choices"))
+                                u"calcs_interims_validator_dup_keyword_error",
+                                default=u"keyword '${keyword}' must have column title '${title}'",
+                                mapping={"keyword": keyword, "title": dup_keyword_title}))
                          )
-        if choices and r_type not in TYPES_WITH_CHOICES:
-            return fail("choices_and_restype_validator",
+        if dup_title_keyword:
+            return fail("calcs_interims_validator",
                         translate(_(
-                                u"choices_and_restype_validator_not_supported_choices_error",
-                                default=u"Chosen control type not supporting choices"))
+                                u"calcs_interims_validator_dup_title_error",
+                                default=u"column title '${title}' must have keyword '${keyword}'",
+                                mapping={"keyword": dup_title_keyword, "title": title}))
                          )
         return success(row)
     return validate
@@ -228,11 +247,14 @@ class InterimsFieldValidator(validator.SimpleFieldValidator):
         data = {str(idx): dict({'row_idx': idx}, **v)
                 for idx, v in enumerate(value or [], start=1)}
         rows = data.values()
+        
         services = api.search(
             {
                 "portal_type": "AnalysisService",
                 "getKeyword": [v['keyword'] for v in rows]
             }, SETUP_CATALOG)
+        
+        calcs = [api.get_object(c) for c in api.search({ "portal_type": "Calculation" }, SETUP_CATALOG) if c.UID != self.context.UID]
 
         _validators = [
             field_wrapper('keyword',
@@ -244,6 +266,7 @@ class InterimsFieldValidator(validator.SimpleFieldValidator):
                           ]),
             field_wrapper('title', [non_blank_validator(),
                           no_dup_value_validator(rows)]),
+            calcs_interims_validator(calcs),
             choices_and_restype_validator(),
             field_wrapper('choices', [choices_syntax_validator()])
         ]
@@ -285,4 +308,4 @@ class InterimsFieldValidationErrorView(MultipleErrorViewSnippet):
     def __init__(self, error, request, widget, field, form, content):
         super(InterimsFieldValidationErrorView, self).__init__(error, request, widget, field, form, content)
         err_snippet = partial(InterimErrorViewSnippet, error, request, widget, field, form)
-        self.error.errors = [err_snippet(err) for err in self.error.errors]
+        self.error.errors = (err_snippet(err) for err in self.error.errors)

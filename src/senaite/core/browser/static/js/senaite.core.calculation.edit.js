@@ -43,12 +43,33 @@ document.addEventListener("DOMContentLoaded", () => {
             rawTestValue = newValue;
             const keywords = newValue.split(",").filter(k => k);
             const visibleRows = getDataGridWidget().get_visible_rows(getTestParamTable());
-            for (let i = 0; i < visibleRows.length - 1; i++) {
-                getDataGridWidget().remove_row(visibleRows[i]);
+            if (keywords.length === 0) {
+                for (let i = 0; i < visibleRows.length - 1; i++) {
+                    getDataGridWidget().remove_row(visibleRows[i]);
+                }
+            } else if (keywords.length > (visibleRows.length - 1)) {
+                let newRows = keywords.length - visibleRows.length + 1;
+                for (let i = 0; i < newRows; i++) {
+                    getDataGridWidget().auto_append_row(getTestParamTable());
+                }
+            } else if (keywords.length < visibleRows.length - 1) {
+                for (let i = 0; i < visibleRows.length - 1; i++) {
+                    let row = $(visibleRows[i]).find("input[id$='-widgets-keyword']");
+                    if (row) {
+                        if (!keywords.includes(row?.val())) {
+                            getDataGridWidget().remove_row(visibleRows[i]);
+                        }
+                    }
+                }
+                // let delRows = visibleRows.length - 1 - keywords.length;
+                // for (let i = delRows; i > 0; i--) {
+                //     getDataGridWidget().remove_row(visibleRows[i]);
+                // }
             }
-            for (let i = 0; i < keywords.length; i++) {
-                getDataGridWidget().auto_append_row(getTestParamTable());
-            }
+
+            // for (let i = 0; i < keywords.length; i++) {
+            //     getDataGridWidget().auto_append_row(getTestParamTable());
+            // }
             hideAAField();
             getDataGridWidget().trigger_custom_event("update_test_parameters", keywords);
             makeReadonlyTestKeywords();
