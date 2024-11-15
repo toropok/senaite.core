@@ -21,11 +21,10 @@
 import re
 
 from bika.lims import api
-from bika.lims import logger
 from bika.lims import senaiteMessageFactory as _
 from senaite.core.browser.form.adapters import EditFormAdapterBase
 from senaite.core.catalog import SETUP_CATALOG
-from senaite.core.content.calculation import calculation_formula
+from senaite.core.content.calculation import calculate_formula
 from senaite.core.i18n import translate
 
 interim_keyword_regex = re.compile(r"interims\.(\d+)\.widgets\.keyword$")
@@ -59,21 +58,11 @@ class EditForm(EditFormAdapterBase):
         return self.data
 
     def modified(self, data):
-        name = data.get("name")
-        value = data.get("value")
-
-        # test_keyword_match = test_keyword_regex.search(name) 
-        test_value_match = test_value_regex.search(name)
-        # test_param_match = test_keyword_match or test_value_match
-
-        # if test_value_match:
-        #    self.calculate_result(data)
-        #elif name == FIELD_FORMULA:
         keywords = self.processing_keywords(data)
         self.add_update_field("form.widgets.raw_test_keywords", 
                               ",".join(keywords.keys()))
         return self.data
-    
+
     def callback(self, data):
         name = data.get("name")
         if not name:
@@ -82,13 +71,13 @@ class EditForm(EditFormAdapterBase):
         if not callable(method):
             return
         return method(data)
-    
+
     def update_form(self, data):
         keywords = self.processing_keywords(data)
         self.add_update_field("form.widgets.raw_test_keywords", 
                               ",".join(keywords.keys()))
         return self.data
-    
+
     def calculate_result(self, data, parameters=None, imports=None):
         form = data.get("form")
         formula = " ".join(form.get(FIELD_FORMULA, "").splitlines())
@@ -97,7 +86,7 @@ class EditForm(EditFormAdapterBase):
         if imports is None:
             imports = self.get_imports(data)
 
-        success, result = calculation_formula(formula, parameters, imports)
+        result = calculate_formula(formula, parameters, imports)
         self.add_update_field(FIELD_TEST_RESULT, result)
         return self.data
 
@@ -124,7 +113,7 @@ class EditForm(EditFormAdapterBase):
         imports = self.get_imports(data)
         self.calculate_result(data, parameters=keywords, imports=imports)
         return self.data
-    
+
     def get_formula_keywords(self, data, interim_keywords):
         form = data.get("form")
         formula = form.get(FIELD_FORMULA, "")
@@ -148,7 +137,7 @@ class EditForm(EditFormAdapterBase):
         self.add_error_field(FIELD_FORMULA, error_msg)
 
         return result_keywords
-    
+
     def get_interim_keywords(self, data):
         form = data.get("form")
         keywords = {}
@@ -159,11 +148,11 @@ class EditForm(EditFormAdapterBase):
                 value = form.get(FIELD_INTERIM_VALUE.format(idx))
                 keywords.update({v: value})
         return keywords
-    
+
     def parsing_formula(self, formula):
         keywords = formula_regex.findall(formula)
-        return set(map(lambda kw: re.sub('[\[\]]', '', kw), keywords))
-    
+        return set(map(lambda kw: re.sub(r"[\[\]]", "", kw), keywords))
+
     def get_test_keywords(self, data):
         form = data.get("form")
         keywords = {}
@@ -187,14 +176,14 @@ class EditForm(EditFormAdapterBase):
                     "function": form.get(FIELD_IMPORTS_FUNC.format(idx)),
                 })
         return imports
-    
+
     def check_keyword(self, keyword):
         query = {
             "portal_type": "AnalysisService",
             "getKeyword": keyword,
         }
         return len(api.search(query, SETUP_CATALOG)) > 0
-    
+
     def get_count_test_rows(self, data):
         form = data.get("form")
         positions = [k for k in form.keys() if test_keyword_regex.search(k)]

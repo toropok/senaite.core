@@ -49,6 +49,7 @@ def fail(field_name, error):
 
 def flatten_dict(d):
     res = {}
+
     def inner(obj, parent_keys=[]):
         for k, v in obj.items():
             if isinstance(v, dict):

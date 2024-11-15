@@ -61,15 +61,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         }
                     }
                 }
-                // let delRows = visibleRows.length - 1 - keywords.length;
-                // for (let i = delRows; i > 0; i--) {
-                //     getDataGridWidget().remove_row(visibleRows[i]);
-                // }
             }
 
-            // for (let i = 0; i < keywords.length; i++) {
-            //     getDataGridWidget().auto_append_row(getTestParamTable());
-            // }
             hideAAField();
             getDataGridWidget().trigger_custom_event("update_test_parameters", keywords);
             makeReadonlyTestKeywords();

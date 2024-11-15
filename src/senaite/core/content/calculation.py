@@ -25,7 +25,6 @@ import re
 
 from AccessControl import ClassSecurityInfo
 from bika.lims import api
-from bika.lims import logger
 from bika.lims import senaiteMessageFactory as _
 from bika.lims.interfaces import IDeactivable
 from plone.autoform import directives
@@ -47,21 +46,17 @@ from zope import component
 from zope import schema
 from z3c.form import error
 from z3c.form import validator
-from z3c.form.interfaces import IAddForm
-from z3c.form.interfaces import IEditForm
 from zope.interface import implementer
 from zope.interface import Interface
 
 
-def calculation_formula(formula, parameters, imports):
+def calculate_formula(formula, parameters, imports):
     formula = formula.replace("[", "{").replace("]", "}").replace("  ", "")
-    success = False
     result = "Failure"
 
     try:
         formula = formula.format(**parameters)
         result = eval(formula, _getGlobals(imports))
-        success = True
     except TypeError as e:
         # non-numeric arguments in interim mapping?
         result = "TypeError: {}".format(str(e.args[0]))
@@ -73,8 +68,8 @@ def calculation_formula(formula, parameters, imports):
         result = "Import Error: {}".format(str(e.args[0]))
     except Exception as e:
         result = "Unspecified exception: {}".format(str(e.args[0]))
-    
-    return success, result
+
+    return result
 
 
 def _getGlobals(imports, **kwargs):
@@ -126,6 +121,7 @@ def _getGlobals(imports, **kwargs):
                     func, mod))
         globs[func] = member
     return globs
+
 
 def _getModuleMember(dotted_name, member):
     """Get the member object of a module.
@@ -551,9 +547,9 @@ class Calculation(Container):
         if not formula:
             mutator(self, "")
             return
-        
+
         imports = self.getPythonImports()
-        result = calculation_formula(formula, mapping, imports)
+        result = calculate_formula(formula, mapping, imports)
 
         mutator(self, str(result))
 
@@ -582,7 +578,7 @@ component.provideAdapter(InterimsFieldValidator)
 
 error.ErrorViewDiscriminators(
     InterimsFieldValidationErrorView,
-    error=error.MultipleErrors, 
+    error=error.MultipleErrors,
     field=ICalculationSchema["interims"],
 )
 component.provideAdapter(InterimsFieldValidationErrorView)
