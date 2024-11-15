@@ -72,7 +72,7 @@ Setup the Lab for testing:
 
     >>> bikasetup.setSelfVerificationEnabled(True)
     >>> analysisservices = bikasetup.bika_analysisservices
-    >>> calculations = bikasetup.bika_calculations
+    >>> calculations = setup.calculations
     >>> client = api.create(portal.clients, "Client", Name="Happy Hills", ClientID="HH")
     >>> contact = api.create(client, "Contact", Firstname="Rita", Lastname="Mohale")
     >>> labcontact = api.create(bikasetup.bika_labcontacts, "LabContact", Firstname="Lab", Lastname="Manager")

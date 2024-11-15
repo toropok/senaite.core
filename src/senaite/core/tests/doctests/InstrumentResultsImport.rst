@@ -94,7 +94,7 @@ Variables:
 
     >>> analysiscategories = setup.analysiscategories
     >>> analysisservices = bikasetup.bika_analysisservices
-    >>> calculations = bikasetup.bika_calculations
+    >>> calculations = setup.calculations
     >>> departments = setup.departments
     >>> instruments = bikasetup.bika_instruments
     >>> labcontacts = bikasetup.bika_labcontacts

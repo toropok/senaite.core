@@ -78,7 +78,7 @@ class Tests(DataTestCase):
     def test_InterimFieldsValidator(self):
         login(self.portal, TEST_USER_NAME)
 
-        calcs = self.portal.bika_setup.bika_calculations
+        calcs = self.portal.setup.calculations
         # Titration
         calc1 = calcs['calculation-1']
 
@@ -260,7 +260,7 @@ class Tests(DataTestCase):
         login(self.portal, TEST_USER_NAME)
 
         v = validationService.validatorFor('formulavalidator')
-        calcs = self.portal.bika_setup.bika_calculations
+        calcs = self.portal.setup.calculations
         calc1 = calcs['calculation-1']
 
         interim_fields = [

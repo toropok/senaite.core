@@ -54,7 +54,7 @@ Variables::
     >>> portal = self.portal
     >>> request = self.request
     >>> setup = portal.bika_setup
-    >>> calculations = setup.bika_calculations
+    >>> calculations = portal.setup.calculations
     >>> sampletypes = portal.setup.sampletypes
     >>> samplepoints = portal.setup.samplepoints
     >>> analysiscategories = portal.setup.analysiscategories
@@ -505,7 +505,7 @@ The created Analysis has the same Calculation attached, as the Analysis Service:
 
     >>> analysis_calc = analysis.getCalculation()
     >>> analysis_calc
-    <Calculation at /plone/bika_setup/bika_calculations/calculation-4>
+    <Calculation at /plone/setup/calculations/calculation-4>
 
 And therefore, also the same Interim Fields as the Calculation:
 
@@ -549,7 +549,7 @@ The calculation should be still there:
 
     >>> analysis_calc = analysis.getCalculation()
     >>> analysis_calc
-    <Calculation at /plone/bika_setup/bika_calculations/calculation-4>
+    <Calculation at /plone/setup/calculations/calculation-4>
 
 And therefore, also the same Interim Fields as the Calculation:
 
@@ -618,7 +618,7 @@ Dependencies
 The Analysis Service `Total Hardness` uses the `Total Hardness` Calculation:
 
     >>> analysisservice4.getCalculation()
-    <Calculation at /plone/bika_setup/bika_calculations/calculation-4>
+    <Calculation at /plone/setup/calculations/calculation-4>
 
 The Calculation is dependent on the `CA` and `MG` Services through its Formula:
 

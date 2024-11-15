@@ -1104,7 +1104,7 @@ Instruments are not versionable::
 
 Calculations are versionable::
 
-    >>> calculations = bika_setup.bika_calculations
+    >>> calculations = senaite_setup.calculations
     >>> calc = api.create(calculations, "Calculation", title="Calculation 1")
 
     >>> api.is_versionable(calc)

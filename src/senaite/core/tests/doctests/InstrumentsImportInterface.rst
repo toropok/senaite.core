@@ -66,7 +66,7 @@ Variables::
     >>> sampletypes = portal.setup.sampletypes
     >>> analysiscategories = portal.setup.analysiscategories
     >>> bika_analysisservices = bika_setup.bika_analysisservices
-    >>> bika_calculations = bika_setup.bika_calculations
+    >>> calculations = portal.setup.calculations
 
 We need certain permissions to create and access objects used in this test,
 so here we will assume the role of Lab Manager::
@@ -128,7 +128,7 @@ This service matches the service specified in the file from which the import wil
     >>> analysisservice3
     <AnalysisService at /plone/bika_setup/bika_analysisservices/analysisservice-3>
 
-    >>> total_calc = api.create(bika_calculations, 'Calculation', title='TotalMagCal')
+    >>> total_calc = api.create(calculations, 'Calculation', title='TotalMagCal')
     >>> total_calc.setFormula('[Mg] + [Ca]')
     >>> analysisservice4 = api.create(bika_analysisservices, 'AnalysisService', title='THCaCO3', Keyword="THCaCO3")
     >>> analysisservice4.setUseDefaultCalculation(False)
@@ -136,7 +136,7 @@ This service matches the service specified in the file from which the import wil
     >>> analysisservice4
     <AnalysisService at /plone/bika_setup/bika_analysisservices/analysisservice-4>
 
-    >>> interim_calc = api.create(bika_calculations, 'Calculation', title='Test-Total-Pest')
+    >>> interim_calc = api.create(calculations, 'Calculation', title='Test-Total-Pest')
     >>> pest1 = {'keyword': 'pest1', 'title': 'Pesticide 1', 'value': 0, 'type': 'int', 'hidden': False, 'unit': ''}
     >>> pest2 = {'keyword': 'pest2', 'title': 'Pesticide 2', 'value': 0, 'type': 'int', 'hidden': False, 'unit': ''}
     >>> pest3 = {'keyword': 'pest3', 'title': 'Pesticide 3', 'value': 0, 'type': 'int', 'hidden': False, 'unit': ''}

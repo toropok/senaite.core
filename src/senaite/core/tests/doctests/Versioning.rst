@@ -36,7 +36,7 @@ Calculations
 
 Create a calculation for testing::
 
-    >>> calculations = self.portal.bika_setup.bika_calculations
+    >>> calculations = self.portal.setup.calculations
     >>> _ = calculations.invokeFactory("Calculation", id="tempId", title="Test Calculation 1")
     >>> calculation = calculations.get(_)
 

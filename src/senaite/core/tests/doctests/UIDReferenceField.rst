@@ -25,7 +25,7 @@ Variables:
 
     >>> portal = self.portal
     >>> request = self.request
-    >>> bika_calculations = portal.bika_setup.bika_setup.bika_calculations
+    >>> calculations = portal.setup.calculations
     >>> bika_analysisservices = portal.bika_setup.bika_setup.bika_analysisservices
 
 Test user:
@@ -50,8 +50,8 @@ First I'll create some AnalysisServices and Calculations:
     >>> as3 = api.create(bika_analysisservices, "AnalysisService", title="AS 3")
     >>> as3.setKeyword("as3")
     >>> as3.reindexObject()
-    >>> c1 = api.create(bika_calculations, "Calculation", title="C 1")
-    >>> c2 = api.create(bika_calculations, "Calculation", title="C 2")
+    >>> c1 = api.create(calculations, "Calculation", title="C 1")
+    >>> c2 = api.create(calculations, "Calculation", title="C 2")
 
 Put some AS Keywords into the `Formula` field of the calculations, which will
 cause their DependentServices field (a UIDReferenceField) to be populated.

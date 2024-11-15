@@ -22,7 +22,8 @@ Variables::
     >>> portal = self.portal
     >>> request = self.request
     >>> setup = portal.bika_setup
-    >>> calculations = setup.bika_calculations
+    >>> senaite_setup = portal.setup
+    >>> calculations = senaite_setup.calculations
     >>> analysisservices = setup.bika_analysisservices
 
 Test user::

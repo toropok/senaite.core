@@ -177,7 +177,7 @@ Setting calculation interims
 
 Create a new calculation with interims:
 
-    >>> calc = api.create(bikasetup.bika_calculations, "Calculation", title="Drying Loss Calculation")
+    >>> calc = api.create(setup.calculations, "Calculation", title="Drying Loss Calculation")
     >>> calc.setInterimFields([{"keyword": "SW", "title": "Weight of Sample"}, {"keyword": "DW", "title": "Dry Sample Weight"}])
     >>> calc.setFormula("[DW]/[SW]*100")
 
