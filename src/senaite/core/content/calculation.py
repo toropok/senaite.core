@@ -50,29 +50,7 @@ from zope.interface import implementer
 from zope.interface import Interface
 
 
-def calculate_formula(formula, parameters, imports):
-    formula = formula.replace("[", "{").replace("]", "}").replace("  ", "")
-    result = "Failure"
-
-    try:
-        formula = formula.format(**parameters)
-        result = eval(formula, _getGlobals(imports))
-    except TypeError as e:
-        # non-numeric arguments in interim mapping?
-        result = "TypeError: {}".format(str(e.args[0]))
-    except ZeroDivisionError as e:
-        result = "Division by 0: {}".format(str(e.args[0]))
-    except KeyError as e:
-        result = "Key Error: {}".format(str(e.args[0]))
-    except ImportError as e:
-        result = "Import Error: {}".format(str(e.args[0]))
-    except Exception as e:
-        result = "Unspecified exception: {}".format(str(e.args[0]))
-
-    return result
-
-
-def _getGlobals(imports, **kwargs):
+def getGlobals(imports=None, **kwargs):
     """Return the globals dictionary for the formula calculation
     """
     # Default globals
@@ -111,10 +89,11 @@ def _getGlobals(imports, **kwargs):
     # Update with keyword arguments
     globs.update(kwargs)
     # Update with additional Python libraries
+    imports = imports or []
     for imp in imports:
         mod = imp["module"]
         func = imp["function"]
-        member = _getModuleMember(mod, func)
+        member = getModuleMember(mod, func)
         if member is None:
             raise ImportError(
                 "Could not find member {} of module {}".format(
@@ -123,7 +102,7 @@ def _getGlobals(imports, **kwargs):
     return globs
 
 
-def _getModuleMember(dotted_name, member):
+def getModuleMember(dotted_name, member):
     """Get the member object of a module.
 
     :param dotted_name: The dotted name of the module, e.g. 'scipy.special'
@@ -139,6 +118,28 @@ def _getModuleMember(dotted_name, member):
 
     members = dict(inspect.getmembers(mod))
     return members.get(member)
+
+
+def calculate_formula(formula="", parameters={}, imports=None):
+    formula = formula.replace("[", "{").replace("]", "}").replace("  ", "")
+    result = "Failure"
+
+    try:
+        formula = formula.format(**parameters)
+        result = eval(formula, getGlobals(imports))
+    except TypeError as e:
+        # non-numeric arguments in interim mapping?
+        result = "TypeError: {}".format(str(e.args[0]))
+    except ZeroDivisionError as e:
+        result = "Division by 0: {}".format(str(e.args[0]))
+    except KeyError as e:
+        result = "Key Error: {}".format(str(e.args[0]))
+    except ImportError as e:
+        result = "Import Error: {}".format(str(e.args[0]))
+    except Exception as e:
+        result = "Unspecified exception: {}".format(str(e.args[0]))
+
+    return result
 
 
 class IImportRecord(Interface):
@@ -299,8 +300,6 @@ class ICalculationSchema(model.Schema):
         default=u"",
     )
 
-    # directives.omitted(IAddForm, 'test_result')
-    # directives.omitted(IEditForm, 'test_result')
     test_result = schema.TextLine(
         title=_(u"label_calculation_test_result",
                 default=u"Test Result"),
@@ -331,6 +330,12 @@ class Calculation(Container):
 
     security = ClassSecurityInfo()
 
+    def _getGlobals(self):
+        return getGlobals(self.getPythonImports())
+
+    def _getModuleMember(self, dotted_name, member):
+        return getModuleMember(dotted_name, member)
+
     @security.protected(permissions.View)
     def getInterimFields(self):
         accessor = self.accessor("interims")
@@ -348,7 +353,10 @@ class Calculation(Container):
             new_value.append(row)
 
         # extract the keywords from the new calculation interims
-        calculation_interim_keys = map(lambda i: i.get("keyword"), value)
+        calculation_interim_keys = list(
+            filter(None,
+                   map(lambda i: i.get("keyword"),
+                       new_value)))
 
         # update all service interims
         for service in self.getCalculationDependants():
@@ -361,13 +369,13 @@ class Calculation(Container):
             new_interims = set(calculation_interim_keys).difference(
                 set(service_interim_keys))
             for key in new_interims:
-                new_interim = value[calculation_interim_keys.index(key)]
+                new_interim = new_value[calculation_interim_keys.index(key)]
                 service_interims.append(new_interim)
             if new_interims:
                 service.setInterimFields(service_interims)
 
         mutator = self.mutator("interims")
-        mutator(self, value)
+        mutator(self, new_value)
 
     def getCalculationDependencies(self, flat=False, deps=None):
         """ Recursively calculates all dependencies of this calculation.
@@ -542,16 +550,13 @@ class Calculation(Container):
         # Gather up and parse formula
         formula = self.getMinifiedFormula()
         mutator = self.mutator("test_result")
+        result = ""
 
-        # Flush the TestResult field and return
-        if not formula:
-            mutator(self, "")
-            return
+        if formula:
+            imports = self.getPythonImports()
+            result = str(calculate_formula(formula, mapping, imports))
 
-        imports = self.getPythonImports()
-        result = calculate_formula(formula, mapping, imports)
-
-        mutator(self, str(result))
+        mutator(self, result)
 
     # BBB: AT schema field property
     TestResult = property(getTestResult, setTestResult)
@@ -559,6 +564,11 @@ class Calculation(Container):
     @security.protected(permissions.View)
     def getDependentServices(self):
         accessor = self.accessor("dependent_services")
+        return accessor(self) or []
+
+    @security.protected(permissions.View)
+    def getRawDependentServices(self):
+        accessor = self.accessor("dependent_services", raw=True)
         return accessor(self) or []
 
     @security.protected(permissions.ModifyPortalContent)

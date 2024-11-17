@@ -2765,12 +2765,12 @@ def migrate_calculation_to_dx(src, destination=None):
     # NOTE: always convert string values to unicode for dexterity fields!
     target.title = api.safe_unicode(src.Title() or "")
     target.description = api.safe_unicode(src.Description() or "")
-    target.interims = src.getInterimFields() or []
-    target.imports = src.getPythonImports() or []
-    target.formula = api.safe_unicode(src.getFormula() or "")
-    target.test_parameters = src.getTestParameters() or []
-    target.test_result = api.safe_unicode(src.getTestResult() or "")
-    target.dependent_services = src.getDependentServices() or []
+    target.setInterimFields(src.getInterimFields() or [])
+    target.setPythonImports(src.getPythonImports() or [])
+    target.setFormula(src.getFormula())
+    target.setTestParameters(src.getTestParameters() or [])
+    target.setTestResult(src.getTestResult() or "")
+    target.setDependentServices(src.getDependentServices() or [])
 
     # Migrate the contents from AT to DX
     migrator = getMultiAdapter(

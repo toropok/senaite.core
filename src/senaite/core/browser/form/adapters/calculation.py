@@ -47,13 +47,13 @@ class EditForm(EditFormAdapterBase):
 
     def initialized(self, data):
         self.add_callback("body", 
-                          "update_test_parameters", 
+                          "update_test_parameters",
                           "update_test_parameters")
         self.add_callback("body", 
-                          "datagrid:row_added", 
+                          "datagrid:row_added",
                           "update_form")
-        self.add_callback("body", 
-                          "datagrid:row_removed", 
+        self.add_callback("body",
+                          "datagrid:row_removed",
                           "update_form")
         return self.data
 
@@ -100,7 +100,7 @@ class EditForm(EditFormAdapterBase):
         for kw in formula_keywords.keys():
             if kw in test_keywords.keys():
                 formula_keywords[kw] = test_keywords.get(kw)
-        return formula_keywords        
+        return formula_keywords
 
     def update_test_parameters(self, data):
         keywords = self.processing_keywords(data)
