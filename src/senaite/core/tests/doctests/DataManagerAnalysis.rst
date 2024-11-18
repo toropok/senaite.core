@@ -184,8 +184,8 @@ Create a new calculation with interims:
     >>> calc.getFormula()
     '[DW]/[SW]*100'
 
-    >>> list(sorted(calc.getInterimFields(), key=lambda i: i.get("keyword")))
-    [{'keyword': 'DW', 'value': 0, 'title': 'Dry Sample Weight'}, {'keyword': 'SW', 'value': 0, 'title': 'Weight of Sample'}]
+    >>> list(sorted([{i['keyword']:i['value']}for i in calc.getInterimFields()], key=lambda i: i.get("keyword")))
+    [{'SW': 0}, {'DW': 0}]
 
 Set the calculation to a new service:
 

@@ -13,6 +13,7 @@ Needed Imports:
     >>> import re
     >>> from bika.lims import api
     >>> from bika.lims.browser.fields.uidreferencefield import get_backreferences
+    >>> from senaite.core.schema.uidreferencefield import get_backrefs
 
 Functional Helpers:
 
@@ -26,7 +27,7 @@ Variables:
     >>> portal = self.portal
     >>> request = self.request
     >>> calculations = portal.setup.calculations
-    >>> bika_analysisservices = portal.bika_setup.bika_setup.bika_analysisservices
+    >>> bika_analysisservices = portal.bika_setup.bika_analysisservices
 
 Test user:
 
@@ -77,7 +78,7 @@ Backreferences are stored on each object which is a target of a
 UIDReferenceField.  This allows a service to ask, "which calculations
 include me in their DependentServices?":
 
-    >>> get_backreferences(as1, 'CalculationDependentServices')
+    >>> get_backrefs(as1, 'CalculationDependentServices')
     ['...', '...']
 
 It also allows to find out which services have selected a particular
@@ -96,8 +97,8 @@ If no relationship is specified when calling get_backreferences, then a dict
 is returned (by reference) containing UIDs of all references for all relations.
 Modifying this dict in-place, will cause the backreferences to be changed!
 
-    >>> get_backreferences(as1)
-    {'CalculationDependentServices': ['...', '...']}
+    >>> get_backreferences(c2)
+    {'AnalysisServiceCalculation': ['...']}
 
 When requesting the entire set of all backreferences only UIDs may be returned,
 and it is an error to request brains:

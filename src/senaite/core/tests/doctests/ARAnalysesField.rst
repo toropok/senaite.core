@@ -484,7 +484,7 @@ Create some interim fields:
 Append interim field `A` to the `Total Hardness` Calculation:
 
     >>> calc4.setInterimFields([interim1])
-    >>> map(lambda x: x["keyword"], calc4.getInterimFields())
+    >>> map(lambda x: str(x["keyword"]), calc4.getInterimFields())
     ['A']
 
 Append interim field `B` to the `Total Hardness` Analysis Service:
@@ -523,7 +523,7 @@ Calculation change and the AR is updated with the same Analysis Service?
 Change the Interim Field of the Calculation to `C`:
 
     >>> calc4.setInterimFields([interim3])
-    >>> map(lambda x: x["keyword"], calc4.getInterimFields())
+    >>> map(lambda x: str(x["keyword"]), calc4.getInterimFields())
     ['C']
 
 Change the Interim Fields of the Analysis Service to `D`:
@@ -553,7 +553,7 @@ The calculation should be still there:
 
 And therefore, also the same Interim Fields as the Calculation:
 
-    >>> map(lambda x: x["keyword"], analysis_calc.getInterimFields())
+    >>> map(lambda x: str(x["keyword"]), analysis_calc.getInterimFields())
     ['C']
 
 The existing Analysis retains the initial Interim Fields of the Analysis

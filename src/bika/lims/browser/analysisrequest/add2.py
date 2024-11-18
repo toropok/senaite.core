@@ -28,8 +28,6 @@ from bika.lims import POINTS_OF_CAPTURE
 from bika.lims import api
 from bika.lims import bikaMessageFactory as _
 from bika.lims import logger
-from bika.lims.api.analysisservice import get_calculation_dependencies_for
-from bika.lims.api.analysisservice import get_service_dependencies_for
 from bika.lims.api.security import check_permission
 from bika.lims.decorators import returns_json
 from bika.lims.interfaces import IAddSampleConfirmation
@@ -50,6 +48,8 @@ from Products.Archetypes.interfaces import IField
 from Products.CMFPlone.utils import safe_unicode
 from Products.Five.browser import BrowserView
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
+from senaite.core.api.analysisservice import get_calculation_dependencies_for
+from senaite.core.api.analysisservice import get_service_dependencies_for
 from senaite.core.catalog import CONTACT_CATALOG
 from senaite.core.p3compat import cmp
 from senaite.core.permissions import TransitionMultiResults

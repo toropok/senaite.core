@@ -25,6 +25,7 @@ from functools import partial
 from . import ValidatedData, success, fail, flatten_dict
 from bika.lims import api
 from bika.lims import senaiteMessageFactory as _
+from bika.lims.api.analysisservice import get_by_keyword
 from senaite.core import logger
 from senaite.core.i18n import translate
 from senaite.core.catalog import SETUP_CATALOG
@@ -253,13 +254,7 @@ class InterimsFieldValidator(validator.SimpleFieldValidator):
         data = {str(idx): dict({'row_idx': idx}, **v)
                 for idx, v in enumerate(value or [], start=1)}
         rows = data.values()
-
-        services = api.search(
-            {
-                "portal_type": "AnalysisService",
-                "getKeyword": [v['keyword'] for v in rows]
-            }, SETUP_CATALOG)
-
+        services = get_by_keyword([v['keyword'] for v in rows])
         ctx_uid = self.context.UID
         calcs = [api.get_object(c) for c in api.search(
             {"portal_type": "Calculation"}, SETUP_CATALOG) if c.UID != ctx_uid]

@@ -14,8 +14,8 @@ Test Setup
 Needed Imports::
 
     >>> from bika.lims import api
-    >>> from bika.lims.api.analysisservice import get_calculation_dependencies_for
-    >>> from bika.lims.api.analysisservice import get_calculation_dependants_for
+    >>> from senaite.core.api.analysisservice import get_calculation_dependencies_for
+    >>> from senaite.core.api.analysisservice import get_calculation_dependants_for
 
 Variables::
 

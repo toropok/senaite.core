@@ -35,6 +35,7 @@ formula_regex = re.compile(r"\[[^\]]*\]")
 
 FIELD_FORMULA = "form.widgets.formula"
 FIELD_TEST_RESULT = "form.widgets.test_result"
+FIELD_DEPENDET_SERVICES = "form.widgets.dependent_services"
 FIELD_TEST_KEYWORD = "form.widgets.test_parameters.{}.widgets.keyword"
 FIELD_TEST_VALUE = "form.widgets.test_parameters.{}.widgets.value"
 FIELD_IMPORTS_FUNC = "form.widgets.imports.{}.widgets.function"
@@ -46,10 +47,10 @@ class EditForm(EditFormAdapterBase):
     """
 
     def initialized(self, data):
-        self.add_callback("body", 
+        self.add_callback("body",
                           "update_test_parameters",
                           "update_test_parameters")
-        self.add_callback("body", 
+        self.add_callback("body",
                           "datagrid:row_added",
                           "update_form")
         self.add_callback("body",
@@ -58,8 +59,8 @@ class EditForm(EditFormAdapterBase):
         return self.data
 
     def modified(self, data):
-        keywords = self.processing_keywords(data)
-        self.add_update_field("form.widgets.raw_test_keywords", 
+        keywords = self.process_keywords(data)
+        self.add_update_field("form.widgets.raw_test_keywords",
                               ",".join(keywords.keys()))
         return self.data
 
@@ -73,8 +74,8 @@ class EditForm(EditFormAdapterBase):
         return method(data)
 
     def update_form(self, data):
-        keywords = self.processing_keywords(data)
-        self.add_update_field("form.widgets.raw_test_keywords", 
+        keywords = self.process_keywords(data)
+        self.add_update_field("form.widgets.raw_test_keywords",
                               ",".join(keywords.keys()))
         return self.data
 
@@ -90,9 +91,9 @@ class EditForm(EditFormAdapterBase):
         self.add_update_field(FIELD_TEST_RESULT, result)
         return self.data
 
-    def processing_keywords(self, data):
+    def process_keywords(self, data):
         interim_keywords = self.get_interim_keywords(data)
-        formula_keywords = self.get_formula_keywords(data, interim_keywords)
+        formula_keywords = self.process_formula(data, interim_keywords)
         test_keywords = self.get_test_keywords(data)
         return self.update_keywords_value(formula_keywords, test_keywords)
 
@@ -103,7 +104,7 @@ class EditForm(EditFormAdapterBase):
         return formula_keywords
 
     def update_test_parameters(self, data):
-        keywords = self.processing_keywords(data)
+        keywords = self.process_keywords(data)
         items = keywords.items()
         kws = []
         for index, item in enumerate(items):
@@ -114,19 +115,24 @@ class EditForm(EditFormAdapterBase):
         self.calculate_result(data, parameters=keywords, imports=imports)
         return self.data
 
-    def get_formula_keywords(self, data, interim_keywords):
+    def process_formula(self, data, interim_keywords):
         form = data.get("form")
         formula = form.get(FIELD_FORMULA, "")
-        formula_keywords = self.parsing_formula(formula)
+        formula_keywords = self.parse_formula(formula)
         result_keywords = {}
+        services = []
         nf_keywords = []
         interim_keys = interim_keywords.keys()
         for kw in formula_keywords:
+            service = self.get_service_by_keyword(kw)
             value = interim_keywords.get(kw, "")
-            if kw in interim_keys or self.check_keyword(kw):
+            if kw in interim_keys or service:
                 result_keywords.update({kw: value})
             else:
                 nf_keywords.append(kw)
+
+            if service:
+                services.append(api.get_uid(service))
 
         error_msg = ""
         if nf_keywords:
@@ -135,6 +141,8 @@ class EditForm(EditFormAdapterBase):
                 default=u"Not found Analysis Services by keywords: ${kws}.",
                 mapping={"kws": ", ".join(nf_keywords)}))
         self.add_error_field(FIELD_FORMULA, error_msg)
+
+        self.add_update_field(FIELD_DEPENDET_SERVICES, services)
 
         return result_keywords
 
@@ -149,7 +157,7 @@ class EditForm(EditFormAdapterBase):
                 keywords.update({v: value})
         return keywords
 
-    def parsing_formula(self, formula):
+    def parse_formula(self, formula):
         keywords = formula_regex.findall(formula)
         return set(map(lambda kw: re.sub(r"[\[\]]", "", kw), keywords))
 
@@ -177,12 +185,13 @@ class EditForm(EditFormAdapterBase):
                 })
         return imports
 
-    def check_keyword(self, keyword):
+    def get_service_by_keyword(self, keyword):
         query = {
             "portal_type": "AnalysisService",
             "getKeyword": keyword,
         }
-        return len(api.search(query, SETUP_CATALOG)) > 0
+        brains = api.search(query, SETUP_CATALOG)
+        return api.get_object(brains[0]) if brains else None
 
     def get_count_test_rows(self, data):
         form = data.get("form")

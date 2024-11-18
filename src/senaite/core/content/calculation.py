@@ -26,6 +26,7 @@ import re
 from AccessControl import ClassSecurityInfo
 from bika.lims import api
 from bika.lims import senaiteMessageFactory as _
+from bika.lims.browser.fields.uidreferencefield import get_backreferences
 from bika.lims.interfaces import IDeactivable
 from plone.autoform import directives
 from plone.supermodel import model
@@ -39,7 +40,6 @@ from senaite.core.schema.fields import DataGridRow
 from senaite.core.schema.interimsfield import InterimsField
 from senaite.core.validators.interimsfield import InterimsFieldValidator
 from senaite.core.validators.interimsfield import InterimsFieldValidationErrorView
-from senaite.core.schema.uidreferencefield import get_backrefs
 from senaite.core.schema.uidreferencefield import UIDReferenceField
 from senaite.core.z3cform.widgets.datagrid import DataGridWidgetFactory
 from zope import component
@@ -440,7 +440,9 @@ class Calculation(Container):
         """
         if deps is None:
             deps = []
-        backrefs = get_backrefs(self, 'AnalysisServiceCalculation')
+        # TODO: when AnalysisService migrate to Dexterity replace w/ get_backrefs method
+        # from senaite.core.schema.uidreferencefield
+        backrefs = get_backreferences(self, 'AnalysisServiceCalculation')
         services = map(api.get_object_by_uid, backrefs)
         for service in services:
             calc = service.getCalculation()
