@@ -4,6 +4,7 @@ Changelog
 2.6.0 (unreleased)
 ------------------
 
+- #2643 Improve performance of analysis verification
 - #2645 Tabbed content view
 - #2624 Added "Maximum holding time" setting to services and analyses
 - #2637 Do not remove inactive services from profiles and templates
