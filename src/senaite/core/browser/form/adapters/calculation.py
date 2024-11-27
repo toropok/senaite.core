@@ -24,7 +24,6 @@ from bika.lims import api
 from bika.lims import senaiteMessageFactory as _
 from bika.lims.api.analysisservice import get_by_keyword
 from senaite.core.browser.form.adapters import EditFormAdapterBase
-from senaite.core.catalog import SETUP_CATALOG
 from senaite.core.content.calculation import calculate_formula
 from senaite.core.i18n import translate
 
