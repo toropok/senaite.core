@@ -22,6 +22,7 @@ import re
 
 from bika.lims import api
 from bika.lims import senaiteMessageFactory as _
+from bika.lims.api.analysisservice import get_by_keyword
 from senaite.core.browser.form.adapters import EditFormAdapterBase
 from senaite.core.catalog import SETUP_CATALOG
 from senaite.core.content.calculation import calculate_formula
@@ -124,7 +125,7 @@ class EditForm(EditFormAdapterBase):
         nf_keywords = []
         interim_keys = interim_keywords.keys()
         for kw in formula_keywords:
-            service = self.get_service_by_keyword(kw)
+            service = get_by_keyword(kw, full_objects=True)
             value = interim_keywords.get(kw, "")
             if kw in interim_keys or service:
                 result_keywords.update({kw: value})
@@ -184,14 +185,6 @@ class EditForm(EditFormAdapterBase):
                     "function": form.get(FIELD_IMPORTS_FUNC.format(idx)),
                 })
         return imports
-
-    def get_service_by_keyword(self, keyword):
-        query = {
-            "portal_type": "AnalysisService",
-            "getKeyword": keyword,
-        }
-        brains = api.search(query, SETUP_CATALOG)
-        return api.get_object(brains[0]) if brains else None
 
     def get_count_test_rows(self, data):
         form = data.get("form")
