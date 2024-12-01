@@ -31,19 +31,20 @@ from z3c.form import validator
 
 def no_wildcards_for_interims():
     def validate(data):
-        interim_keywords = filter(None, map(lambda i: i.get("keyword"), data['interims'] or []))
+        interim_keywords = filter(
+            None, map(lambda i: i.get("keyword"), data['interims'] or []))
         keysandwildcards = map(
-            lambda k: k.split(".", 1), 
+            lambda k: k.split(".", 1),
             filter(
-                lambda k: "." in k, 
+                lambda k: "." in k,
                 re.compile(r"\[([^\]]+)\]").findall(data['formula'])))
         errwilds = [k[1] for k in keysandwildcards if k[0] in interim_keywords]
         if len(errwilds) > 0:
             return fail("no_wildcards_interims",
                         translate(
                             _(u"no_wildcards_interims_error",
-                                default=u"Wildcards for interims are not allowed:"
-                                        u" ${wildcards}",
+                                default=u"Wildcards for interims are not "
+                                        u"allowed: ${wildcards}",
                                 mapping={"wildcards": ", ".join(errwilds)}))
                         )
         return success(data)
@@ -54,17 +55,19 @@ def invalid_wildcards_check():
     def validate(data):
         keywords = re.compile(r"\[([^\.^\]]+)\]").findall(data['formula'])
         keysandwildcards = map(
-            lambda k: k.split(".", 1), 
+            lambda k: k.split(".", 1),
             filter(
-                lambda k: "." in k, 
+                lambda k: "." in k,
                 re.compile(r"\[([^\]]+)\]").findall(data['formula'])))
         allowedwds = ("LDL", "UDL", "BELOWLDL", "ABOVEUDL")
-        wildcards = [k[1] for k in keysandwildcards if k[0] in keywords and k[1] not in allowedwds]
+        wildcards = [k[1] for k in keysandwildcards if k[0]
+                     in keywords and k[1] not in allowedwds]
         if len(wildcards) > 0:
             return fail("invalid_wildcards_check",
                         translate(
                             _(u"invalid_wildcards_check_error",
-                                default=u"Invalid wildcards found: ${wildcards}",
+                                default=u"Invalid wildcards "
+                                        u"found: ${wildcards}",
                                 mapping={"wildcards":  ", ".join(wildcards)}))
                         )
         return success(data)
@@ -74,15 +77,18 @@ def invalid_wildcards_check():
 def invalid_keyword():
     def validate(data):
         keywords = re.compile(r"\[([^\.^\]]+)\]").findall(data['formula'])
-        interim_keywords = filter(None, map(lambda i: i.get("keyword"), data['interims'] or []))
+        interim_keywords = filter(
+            None, map(lambda i: i.get("keyword"), data['interims'] or []))
         as_keywords = [k for k in keywords if k not in interim_keywords]
         services = get_by_keyword(as_keywords)
         if len(as_keywords) != len(services):
-            err_keywords = [k for k in as_keywords if k not in [s.getKeyword for s in services]]
+            err_keywords = [k for k in as_keywords if k not in [
+                s.getKeyword for s in services]]
             return fail("invalid_keyword",
                         translate(
                             _(u"invalid_keyword_error",
-                                default=u"AnalysesServices not found for keywords: ${keywords}",
+                                default=u"AnalysesServices not found "
+                                        u"for keywords: ${keywords}",
                                 mapping={"keywords": ", ".join(err_keywords)}))
                         )
         return success(data)
@@ -94,10 +100,10 @@ class FormulaValidator(validator.InvariantsValidator):
     """
 
     _validators = (
-            no_wildcards_for_interims(),
-            invalid_wildcards_check(),
-            invalid_keyword()
-        )
+        no_wildcards_for_interims(),
+        invalid_wildcards_check(),
+        invalid_keyword()
+    )
 
     def validateObject(self, obj):
         errors = super(FormulaValidator, self).validateObject(obj)
@@ -108,8 +114,9 @@ class FormulaValidator(validator.InvariantsValidator):
         except Exception as err:
             logger.error("ERROR FORMULA VALIDATION CHAIN: {}".format(err))
             errors += (Invalid(translate(_(u"formula_validation_chain_error",
-                                      default=u"Validation chain internal error: ${error}",
-                                      mapping={"error": err}))),)
+                                           default=u"Validation chain "
+                                                   u"internal error: ${error}",
+                                           mapping={"error": err}))),)
             return errors
 
         for err in result['errors'].values():

@@ -25,7 +25,9 @@ from plone.app.testing import TEST_USER_NAME
 from plone.app.testing import login
 from plone.app.testing import setRoles
 from Products.validation import validation as validationService
+from senaite.core.content.calculation import ICalculationSchema
 from senaite.core.tests.base import DataTestCase
+from senaite.core.validators.formula import FormulaValidator
 from senaite.core.validators.interimsfield import InterimsFieldValidator
 from z3c.form.error import MultipleErrors
 
@@ -110,7 +112,8 @@ class Tests(DataTestCase):
             InterimsFieldValidator(
                 calc1, self.portal.REQUEST, None, None, None
             ).validate(interim_fields)
-        self.assertEqual(str(arc.exception.errors[0][2]), "'keyword' contains invalid characters")
+        self.assertEqual(
+            str(arc.exception.errors[0][2]), "'keyword' contains invalid characters")
 
         interim_fields = [
             {'keyword': 'XXX',
@@ -126,7 +129,8 @@ class Tests(DataTestCase):
             InterimsFieldValidator(
                 calc1, self.portal.REQUEST, None, None, None
             ).validate(interim_fields)
-        self.assertEqual(str(arc.exception.errors[0][2]), "column title 'Gross Mass' must have keyword 'GM'")
+        self.assertEqual(str(
+            arc.exception.errors[0][2]), "column title 'Gross Mass' must have keyword 'GM'")
 
         interim_fields = [
             {'keyword': 'GM', 'title': 'XXX', 'unit': '', 'default': ''},
@@ -139,7 +143,8 @@ class Tests(DataTestCase):
             InterimsFieldValidator(
                 calc1, self.portal.REQUEST, None, None, None
             ).validate(interim_fields)
-        self.assertEqual(str(arc.exception.errors[0][2]), "keyword 'GM' must have column title 'Gross Mass'")
+        self.assertEqual(str(
+            arc.exception.errors[0][2]), "keyword 'GM' must have column title 'Gross Mass'")
 
         interim_fields = [
             {'keyword': 'TV',
@@ -155,7 +160,8 @@ class Tests(DataTestCase):
             InterimsFieldValidator(
                 calc1, self.portal.REQUEST, None, None, None
             ).validate(interim_fields)
-        self.assertEqual(str(arc.exception.errors[0][2]), "'keyword' duplicates found")
+        self.assertEqual(
+            str(arc.exception.errors[0][2]), "'keyword' duplicates found")
 
         interim_fields = [
             {'keyword': 'TV',
@@ -171,7 +177,8 @@ class Tests(DataTestCase):
             InterimsFieldValidator(
                 calc1, self.portal.REQUEST, None, None, None
             ).validate(interim_fields)
-        self.assertEqual(str(arc.exception.errors[0][2]), "'title' duplicates found")
+        self.assertEqual(
+            str(arc.exception.errors[0][2]), "'title' duplicates found")
 
         interim_fields = [
             {'keyword': 'TV',
@@ -187,7 +194,8 @@ class Tests(DataTestCase):
             InterimsFieldValidator(
                 calc1, self.portal.REQUEST, None, None, None
             ).validate(interim_fields)
-        self.assertEqual(str(arc.exception.errors[0][2]), "keyword 'TV' must have column title 'Titr Vol'")
+        self.assertEqual(
+            str(arc.exception.errors[0][2]), "keyword 'TV' must have column title 'Titr Vol'")
 
     def test_UncertaintyValidator(self):
         login(self.portal, TEST_USER_NAME)
@@ -197,57 +205,77 @@ class Tests(DataTestCase):
         field = serv1.schema['Uncertainties']
         key = serv1.id + field.getName()
 
-        uncertainties = [{'intercept_min': '100.01', 'intercept_max': '200', 'errorvalue': '200%'}]
+        uncertainties = [{'intercept_min': '100.01',
+                          'intercept_max': '200', 'errorvalue': '200%'}]
         self.portal.REQUEST['Uncertainties'] = uncertainties
-        res = v(uncertainties, instance=serv1, field=field, REQUEST=self.portal.REQUEST)
-        self.failUnlessEqual(res, "Validation failed: Error percentage must be between 0 and 100")
+        res = v(uncertainties, instance=serv1,
+                field=field, REQUEST=self.portal.REQUEST)
+        self.failUnlessEqual(
+            res, "Validation failed: Error percentage must be between 0 and 100")
 
-        uncertainties = [{'intercept_min': 'a', 'intercept_max': '200', 'errorvalue': '10%'}]
+        uncertainties = [{'intercept_min': 'a',
+                          'intercept_max': '200', 'errorvalue': '10%'}]
         self.portal.REQUEST['Uncertainties'] = uncertainties
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
-        res = v(uncertainties, instance=serv1, field=field, REQUEST=self.portal.REQUEST)
-        self.failUnlessEqual(res, "Validation failed: Min values must be numeric")
+        res = v(uncertainties, instance=serv1,
+                field=field, REQUEST=self.portal.REQUEST)
+        self.failUnlessEqual(
+            res, "Validation failed: Min values must be numeric")
 
-        uncertainties = [{'intercept_min': '100.01', 'intercept_max': 'a', 'errorvalue': '10%'}]
+        uncertainties = [{'intercept_min': '100.01',
+                          'intercept_max': 'a', 'errorvalue': '10%'}]
         self.portal.REQUEST['Uncertainties'] = uncertainties
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
-        res = v(uncertainties, instance=serv1, field=field, REQUEST=self.portal.REQUEST)
-        self.failUnlessEqual(res, "Validation failed: Max values must be numeric")
+        res = v(uncertainties, instance=serv1,
+                field=field, REQUEST=self.portal.REQUEST)
+        self.failUnlessEqual(
+            res, "Validation failed: Max values must be numeric")
 
-        uncertainties = [{'intercept_min': '100.01', 'intercept_max': '200', 'errorvalue': 'a%'}]
+        uncertainties = [{'intercept_min': '100.01',
+                          'intercept_max': '200', 'errorvalue': 'a%'}]
         self.portal.REQUEST['Uncertainties'] = uncertainties
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
-        res = v(uncertainties, instance=serv1, field=field, REQUEST=self.portal.REQUEST)
-        self.failUnlessEqual(res, "Validation failed: Error values must be numeric")
+        res = v(uncertainties, instance=serv1,
+                field=field, REQUEST=self.portal.REQUEST)
+        self.failUnlessEqual(
+            res, "Validation failed: Error values must be numeric")
 
-        uncertainties = [{'intercept_min': '200', 'intercept_max': '100', 'errorvalue': '10%'}]
+        uncertainties = [{'intercept_min': '200',
+                          'intercept_max': '100', 'errorvalue': '10%'}]
         self.portal.REQUEST['Uncertainties'] = uncertainties
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
-        res = v(uncertainties, instance=serv1, field=field, REQUEST=self.portal.REQUEST)
-        self.failUnlessEqual(res, "Validation failed: Max values must be greater than Min values")
+        res = v(uncertainties, instance=serv1,
+                field=field, REQUEST=self.portal.REQUEST)
+        self.failUnlessEqual(
+            res, "Validation failed: Max values must be greater than Min values")
 
-        uncertainties = [{'intercept_min': '100', 'intercept_max': '200', 'errorvalue': '-5%'}]
+        uncertainties = [{'intercept_min': '100',
+                          'intercept_max': '200', 'errorvalue': '-5%'}]
         self.portal.REQUEST['Uncertainties'] = uncertainties
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
-        res = v(uncertainties, instance=serv1, field=field, REQUEST=self.portal.REQUEST)
-        self.failUnlessEqual(res, "Validation failed: Error percentage must be between 0 and 100")
+        res = v(uncertainties, instance=serv1,
+                field=field, REQUEST=self.portal.REQUEST)
+        self.failUnlessEqual(
+            res, "Validation failed: Error percentage must be between 0 and 100")
 
-        uncertainties = [{'intercept_min': '100', 'intercept_max': '200', 'errorvalue': '-5'}]
+        uncertainties = [{'intercept_min': '100',
+                          'intercept_max': '200', 'errorvalue': '-5'}]
         self.portal.REQUEST['Uncertainties'] = uncertainties
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
-        res = v(uncertainties, instance=serv1, field=field, REQUEST=self.portal.REQUEST)
-        self.failUnlessEqual(res, "Validation failed: Error value must be 0 or greater")
+        res = v(uncertainties, instance=serv1,
+                field=field, REQUEST=self.portal.REQUEST)
+        self.failUnlessEqual(
+            res, "Validation failed: Error value must be 0 or greater")
 
     def test_FormulaValidator(self):
         login(self.portal, TEST_USER_NAME)
 
-        v = validationService.validatorFor('formulavalidator')
         calcs = self.portal.setup.calculations
         calc1 = calcs['calculation-1']
 
@@ -257,21 +285,26 @@ class Tests(DataTestCase):
              'unit': '',
              'default': ''},
             {'keyword': 'TF', 'title': 'Titration Factor', 'unit': '', 'default': ''}]
-        self.portal.REQUEST.form['InterimFields'] = interim_fields
-
-        formula = "[TV] * [TF] * [Wrong]"
-        self.failUnlessEqual(
-            v(formula, instance=calc1, field=calc1.schema.get(
-                'Formula'), REQUEST=self.portal.REQUEST),
-            "Validation failed: Keyword 'Wrong' is invalid")
-
-        formula = "[TV] * [TF]"
+        self.portal.REQUEST.form['interims'] = interim_fields
+        self.portal.REQUEST.form['formula'] = "[TV] * [TF] * [Wrong]"
         self.assertEqual(
-            True,
-            v(formula,
-              instance=calc1,
-              field=calc1.schema.get('Formula'),
-              REQUEST=self.portal.REQUEST))
+            FormulaValidator(
+                calc1,
+                self.portal.REQUEST,
+                None,
+                ICalculationSchema,
+                None).validate(self.portal.REQUEST.form)[0].message,
+            "AnalysesServices not found for keywords: Wrong")
+
+        self.portal.REQUEST.form['formula'] = "[TV] * [TF]"
+        self.assertEqual(
+            tuple(),
+            FormulaValidator(
+                calc1,
+                self.portal.REQUEST,
+                None,
+                ICalculationSchema,
+                None).validate(self.portal.REQUEST.form))
 
 
 def test_suite():
