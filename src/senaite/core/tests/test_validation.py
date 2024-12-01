@@ -26,6 +26,8 @@ from plone.app.testing import login
 from plone.app.testing import setRoles
 from Products.validation import validation as validationService
 from senaite.core.tests.base import DataTestCase
+from senaite.core.validators.interimsfield import InterimsFieldValidator
+from z3c.form.error import MultipleErrors
 
 
 class Tests(DataTestCase):
@@ -82,37 +84,33 @@ class Tests(DataTestCase):
         # Titration
         calc1 = calcs['calculation-1']
 
-        key = calc1.id + 'InterimFields'
+        key = calc1.id + 'interims'
 
         interim_fields = []
-        self.portal.REQUEST.form['InterimFields'] = interim_fields
+        self.portal.REQUEST.form['interims'] = interim_fields
         self.portal.REQUEST['validated'] = None
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
-        self.assertEqual(
-            None,
-            calc1.schema.get(
-                'InterimFields').validate(
-                    interim_fields,
-                    calc1,
-                    REQUEST=self.portal.REQUEST))
+        self.assertIsNone(
+            InterimsFieldValidator(
+                calc1, self.portal.REQUEST, None, None, None
+            ).validate(interim_fields))
 
         interim_fields = [{'keyword': '&',
                            'title': 'Titration Volume',
                            'unit': '',
                            'default': ''},
                           ]
-        self.portal.REQUEST.form['InterimFields'] = interim_fields
+        self.portal.REQUEST.form['interims'] = interim_fields
         self.portal.REQUEST['validated'] = None
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
-        self.assertEqual(
-            calc1.schema.get(
-                'InterimFields').validate(
-                    interim_fields,
-                    calc1,
-                    REQUEST=self.portal.REQUEST),
-            u"Validation failed: keyword contains invalid characters")
+
+        with self.assertRaises(MultipleErrors) as arc:
+            InterimsFieldValidator(
+                calc1, self.portal.REQUEST, None, None, None
+            ).validate(interim_fields)
+        self.assertEqual(str(arc.exception.errors[0][2]), "'keyword' contains invalid characters")
 
         interim_fields = [
             {'keyword': 'XXX',
@@ -120,32 +118,28 @@ class Tests(DataTestCase):
              'unit': '',
              'default': ''},
             {'keyword': 'TV', 'title': 'Titration Volume', 'unit': '', 'default': ''}]
-        self.portal.REQUEST.form['InterimFields'] = interim_fields
+        self.portal.REQUEST.form['interims'] = interim_fields
         self.portal.REQUEST['validated'] = None
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
-        self.assertEqual(
-            calc1.schema.get(
-                'InterimFields').validate(
-                    interim_fields,
-                    calc1,
-                    REQUEST=self.portal.REQUEST),
-            u"Validation failed: column title 'Gross Mass' must have keyword 'GM'")
+        with self.assertRaises(MultipleErrors) as arc:
+            InterimsFieldValidator(
+                calc1, self.portal.REQUEST, None, None, None
+            ).validate(interim_fields)
+        self.assertEqual(str(arc.exception.errors[0][2]), "column title 'Gross Mass' must have keyword 'GM'")
 
         interim_fields = [
             {'keyword': 'GM', 'title': 'XXX', 'unit': '', 'default': ''},
             {'keyword': 'TV', 'title': 'Titration Volume', 'unit': '', 'default': ''}]
-        self.portal.REQUEST.form['InterimFields'] = interim_fields
+        self.portal.REQUEST.form['interims'] = interim_fields
         self.portal.REQUEST['validated'] = None
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
-        self.assertEqual(
-            calc1.schema.get(
-                'InterimFields').validate(
-                    interim_fields,
-                    calc1,
-                    REQUEST=self.portal.REQUEST),
-            u"Validation failed: keyword 'GM' must have column title 'Gross Mass'")
+        with self.assertRaises(MultipleErrors) as arc:
+            InterimsFieldValidator(
+                calc1, self.portal.REQUEST, None, None, None
+            ).validate(interim_fields)
+        self.assertEqual(str(arc.exception.errors[0][2]), "keyword 'GM' must have column title 'Gross Mass'")
 
         interim_fields = [
             {'keyword': 'TV',
@@ -153,17 +147,15 @@ class Tests(DataTestCase):
              'unit': '',
              'default': ''},
             {'keyword': 'TV', 'title': 'Titration Volume 1', 'unit': '', 'default': ''}]
-        self.portal.REQUEST.form['InterimFields'] = interim_fields
+        self.portal.REQUEST.form['interims'] = interim_fields
         self.portal.REQUEST['validated'] = None
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
-        self.assertEqual(
-            calc1.schema.get(
-                'InterimFields').validate(
-                    interim_fields,
-                    calc1,
-                    REQUEST=self.portal.REQUEST),
-            u"Validation failed: 'TV': duplicate keyword")
+        with self.assertRaises(MultipleErrors) as arc:
+            InterimsFieldValidator(
+                calc1, self.portal.REQUEST, None, None, None
+            ).validate(interim_fields)
+        self.assertEqual(str(arc.exception.errors[0][2]), "'keyword' duplicates found")
 
         interim_fields = [
             {'keyword': 'TV',
@@ -171,17 +163,15 @@ class Tests(DataTestCase):
              'unit': '',
              'default': ''},
             {'keyword': 'TF', 'title': 'Titration Volume', 'unit': '', 'default': ''}]
-        self.portal.REQUEST.form['InterimFields'] = interim_fields
+        self.portal.REQUEST.form['interims'] = interim_fields
         self.portal.REQUEST['validated'] = None
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
-        self.assertEqual(
-            calc1.schema.get(
-                'InterimFields').validate(
-                    interim_fields,
-                    calc1,
-                    REQUEST=self.portal.REQUEST),
-            u"Validation failed: 'Titration Volume': duplicate title")
+        with self.assertRaises(MultipleErrors) as arc:
+            InterimsFieldValidator(
+                calc1, self.portal.REQUEST, None, None, None
+            ).validate(interim_fields)
+        self.assertEqual(str(arc.exception.errors[0][2]), "'title' duplicates found")
 
         interim_fields = [
             {'keyword': 'TV',
@@ -189,17 +179,15 @@ class Tests(DataTestCase):
              'unit': '',
              'default': ''},
             {'keyword': 'TF', 'title': 'Titration Factor', 'unit': '', 'default': ''}]
-        self.portal.REQUEST.form['InterimFields'] = interim_fields
+        self.portal.REQUEST.form['interims'] = interim_fields
         self.portal.REQUEST['validated'] = None
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
-        self.assertEqual(
-            None,
-            calc1.schema.get(
-                'InterimFields').validate(
-                    interim_fields,
-                    calc1,
-                    REQUEST=self.portal.REQUEST))
+        with self.assertRaises(MultipleErrors) as arc:
+            InterimsFieldValidator(
+                calc1, self.portal.REQUEST, None, None, None
+            ).validate(interim_fields)
+        self.assertEqual(str(arc.exception.errors[0][2]), "keyword 'TV' must have column title 'Titr Vol'")
 
     def test_UncertaintyValidator(self):
         login(self.portal, TEST_USER_NAME)

@@ -66,8 +66,8 @@ def invalid_characters_validator():
             return fail("invalid_characters_validator",
                         translate(
                             _(u"invalid_characters_validator_error",
-                                default=u"'${field_name}' \
-                                    contains invalid characters",
+                                default=u"'${field_name}' "
+                                        u"contains invalid characters",
                                 mapping={"field_name": k}))
                         )
         return success(field)
