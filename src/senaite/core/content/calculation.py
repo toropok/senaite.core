@@ -38,6 +38,7 @@ from senaite.core.interfaces import ICalculation
 from senaite.core.schema.fields import DataGridField
 from senaite.core.schema.fields import DataGridRow
 from senaite.core.schema.interimsfield import InterimsField
+from senaite.core.validators.formula import FormulaValidator
 from senaite.core.validators.interimsfield import InterimsFieldValidator
 from senaite.core.validators.interimsfield import InterimsFieldValidationErrorView
 from senaite.core.schema.uidreferencefield import UIDReferenceField
@@ -46,6 +47,7 @@ from zope import component
 from zope import schema
 from z3c.form import error
 from z3c.form import validator
+from z3c.form import util
 from zope.interface import implementer
 from zope.interface import Interface
 
@@ -581,6 +583,10 @@ class Calculation(Container):
     # BBB: AT schema field property
     DependentServices = property(getDependentServices, setDependentServices)
 
+
+validator.WidgetsValidatorDiscriminators(
+     FormulaValidator, schema=util.getSpecification(ICalculationSchema, force=True))
+component.provideAdapter(FormulaValidator)
 
 validator.WidgetValidatorDiscriminators(
     InterimsFieldValidator,
