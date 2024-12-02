@@ -19,13 +19,14 @@
 # Some rights reserved, see README and LICENSE.
 
 import re
+from functools import reduce
 
 from bika.lims import api
-from bika.lims import senaiteMessageFactory as _
 from bika.lims.api.analysisservice import get_by_keyword
 from senaite.core.browser.form.adapters import EditFormAdapterBase
 from senaite.core.content.calculation import calculate_formula
-from senaite.core.i18n import translate
+from senaite.core.content.calculation import ICalculationSchema
+from senaite.core.validators.formula import FormulaValidator
 
 interim_keyword_regex = re.compile(r"interims\.(\d+)\.widgets\.keyword$")
 imports_module_regex = re.compile(r"imports\.(\d+)\.widgets\.module$")
@@ -35,11 +36,17 @@ formula_regex = re.compile(r"\[[^\]]*\]")
 
 FIELD_FORMULA = "form.widgets.formula"
 FIELD_TEST_RESULT = "form.widgets.test_result"
-FIELD_DEPENDET_SERVICES = "form.widgets.dependent_services"
+FIELD_DEPENDENT_SERVICES = "form.widgets.dependent_services"
 FIELD_TEST_KEYWORD = "form.widgets.test_parameters.{}.widgets.keyword"
 FIELD_TEST_VALUE = "form.widgets.test_parameters.{}.widgets.value"
 FIELD_IMPORTS_FUNC = "form.widgets.imports.{}.widgets.function"
 FIELD_INTERIM_VALUE = "form.widgets.interims.{}.widgets.value"
+
+
+def deep_get(dictionary, *keys):
+    def _inner_get(d, key):
+        return d.get(key, None) if isinstance(d, dict) else None
+    return reduce(lambda d, key: _inner_get(d, key), keys, dictionary)
 
 
 class EditForm(EditFormAdapterBase):
@@ -59,9 +66,25 @@ class EditForm(EditFormAdapterBase):
         return self.data
 
     def modified(self, data):
+        errors = FormulaValidator(
+            self.context,
+            self.request,
+            None,
+            ICalculationSchema,
+            None).validate(
+                {"formula": deep_get(data, "form", FIELD_FORMULA) or "",
+                 "interims":
+                 [{"keyword": i} for i in self.get_interim_keywords(data)]})
+        if errors:
+            err_msg = "; ".join([err.message for err in errors])
+            self.add_error_field(FIELD_FORMULA, err_msg)
+            return self.data
+
+        self.add_error_field(FIELD_FORMULA, "")
         keywords = self.process_keywords(data)
         self.add_update_field("form.widgets.raw_test_keywords",
                               ",".join(keywords.keys()))
+
         return self.data
 
     def callback(self, data):
@@ -86,7 +109,6 @@ class EditForm(EditFormAdapterBase):
             parameters = self.get_test_keywords(data)
         if imports is None:
             imports = self.get_imports(data)
-
         result = calculate_formula(formula, parameters, imports)
         self.add_update_field(FIELD_TEST_RESULT, result)
         return self.data
@@ -95,6 +117,13 @@ class EditForm(EditFormAdapterBase):
         interim_keywords = self.get_interim_keywords(data)
         formula_keywords = self.process_formula(data, interim_keywords)
         test_keywords = self.get_test_keywords(data)
+
+        dep_services_uids = map(
+            api.get_uid,
+            get_by_keyword(
+                [k for k in formula_keywords if k not in interim_keywords]))
+        self.add_update_field(FIELD_DEPENDENT_SERVICES, dep_services_uids)
+
         return self.update_keywords_value(formula_keywords, test_keywords)
 
     def update_keywords_value(self, formula_keywords, test_keywords):
@@ -116,34 +145,10 @@ class EditForm(EditFormAdapterBase):
         return self.data
 
     def process_formula(self, data, interim_keywords):
-        form = data.get("form")
-        formula = form.get(FIELD_FORMULA, "")
+        formula = deep_get(data, "form", FIELD_FORMULA)
         formula_keywords = self.parse_formula(formula)
-        result_keywords = {}
-        services = []
-        nf_keywords = []
-        interim_keys = interim_keywords.keys()
-        for kw in formula_keywords:
-            service = get_by_keyword(kw, full_objects=True)
-            value = interim_keywords.get(kw, "")
-            if kw in interim_keys or service:
-                result_keywords.update({kw: value})
-            else:
-                nf_keywords.append(kw)
-
-            if service:
-                services.append(api.get_uid(service))
-
-        error_msg = ""
-        if nf_keywords:
-            error_msg = translate(_(
-                u"keyword_not_found",
-                default=u"Not found Analysis Services by keywords: ${kws}.",
-                mapping={"kws": ", ".join(nf_keywords)}))
-        self.add_error_field(FIELD_FORMULA, error_msg)
-
-        self.add_update_field(FIELD_DEPENDET_SERVICES, services)
-
+        result_keywords = {kw: interim_keywords.get(
+            kw, "") for kw in formula_keywords}
         return result_keywords
 
     def get_interim_keywords(self, data):

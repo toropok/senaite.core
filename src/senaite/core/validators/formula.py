@@ -53,7 +53,8 @@ def no_wildcards_for_interims():
 
 def invalid_wildcards_check():
     def validate(data):
-        keywords = re.compile(r"\[([^\.^\]]+)\]").findall(data['formula'])
+        interim_keywords = filter(
+            None, map(lambda i: i.get("keyword"), data['interims'] or []))
         keysandwildcards = map(
             lambda k: k.split(".", 1),
             filter(
@@ -61,7 +62,7 @@ def invalid_wildcards_check():
                 re.compile(r"\[([^\]]+)\]").findall(data['formula'])))
         allowedwds = ("LDL", "UDL", "BELOWLDL", "ABOVEUDL")
         wildcards = [k[1] for k in keysandwildcards if k[0]
-                     in keywords and k[1] not in allowedwds]
+                     not in interim_keywords and k[1] not in allowedwds]
         if len(wildcards) > 0:
             return fail("invalid_wildcards_check",
                         translate(
