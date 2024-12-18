@@ -1,14 +1,13 @@
 #
 # Translators:
 # Jordi Puiggené <jpuiggene@naralabs.com>, 2023
-# David Molins, 2024
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: YEAR-MO-DA HO:MI +ZONE\n"
+"POT-Creation-Date: 2024-07-16 10:25+0000\n"
 "PO-Revision-Date: 2018-06-01 18:46+0000\n"
-"Last-Translator: David Molins, 2024\n"
+"Last-Translator: Jordi Puiggené <jpuiggene@naralabs.com>, 2023\n"
 "Language-Team: Spanish (https://app.transifex.com/senaite/teams/87045/es/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -52,6 +51,10 @@ msgstr "Configurar regla"
 msgid "Content rule settings updated."
 msgstr "Configuración de regla de contenido actualizada."
 
+#: senaite/core/browser/dexterity/templates/container.pt:29
+msgid "Contents"
+msgstr "Contenidos"
+
 #: senaite/core/browser/contentrules/templates/controlpanel.pt:52
 msgid "Disable globally"
 msgstr "Deshabilitar globalmente"
@@ -89,12 +92,6 @@ msgstr "Ir a la página de actualización"
 msgid "Home"
 msgstr "Inicio"
 
-#: senaite/core/browser/dexterity/templates/macros.pt:26
-#: senaite/core/browser/portlets/templates/manage-contextual.pt:38
-#: senaite/core/browser/sharing/templates/client_sharing.pt:22
-msgid "Info"
-msgstr ""
-
 #: senaite/core/browser/quickinstaller/templates/quickinstaller.pt:132
 msgid "Install"
 msgstr "Instalar"
@@ -106,10 +103,6 @@ msgstr "Entrar"
 #: senaite/core/profiles/default/actions.xml
 msgid "Log out"
 msgstr "Salir"
-
-#: senaite/core/skins/senaite_templates/senaite_widgets/recordswidget.pt:275
-msgid "More"
-msgstr ""
 
 #: senaite/core/browser/portlets/templates/edit-manager-macros.pt:79
 msgid "Move down"
@@ -135,17 +128,9 @@ msgstr "Desactivar"
 msgid "On"
 msgstr "Activar"
 
-#: senaite/core/profiles/default/actions.xml
-msgid "Register"
-msgstr ""
-
 #: senaite/core/profiles/default/registry.xml
 msgid "Relative URL for the SENAITE toolbar logo"
 msgstr "URL relativo basado en el sitio SENAITE para el logo de la barra de herramientas"
-
-#: senaite/core/profiles/default/actions.xml
-msgid "Search"
-msgstr ""
 
 #: senaite/core/browser/sharing/templates/client_sharing.pt:67
 msgid "Search for user or group"
@@ -245,11 +230,6 @@ msgstr "Usuarios y Grupos"
 #: senaite/core/browser/controlpanel/templates/overview.pt:143
 msgid "WSGI:"
 msgstr "WSGI:"
-
-#: senaite/core/browser/controlpanel/templates/overview.pt:26
-#: senaite/core/browser/quickinstaller/templates/quickinstaller.pt:86
-msgid "Warning"
-msgstr ""
 
 #: senaite/core/browser/contentrules/templates/controlpanel.pt:53
 msgid "Whether or not content rules should be disabled globally. If this is selected, no rules will be executed anywhere in the portal."
@@ -942,7 +922,7 @@ msgstr "¿Necesita una cuenta?"
 #. Default: "No file"
 #: senaite/core/z3cform/widgets/datagrid/datagridrow_file_display.pt:27
 msgid "no_file"
-msgstr "Archivo no encontrado"
+msgstr ""
 
 #. Default: "Plain Text"
 #: senaite/core/skins/senaite_templates/tinymce_wysiwyg_support.pt:61
