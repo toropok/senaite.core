@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2024-07-16 10:25+0000\n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI +ZONE\n"
 "PO-Revision-Date: 2018-06-01 18:46+0000\n"
 "Last-Translator: PavelFadeev, 2022\n"
 "Language-Team: Russian (https://app.transifex.com/senaite/teams/87045/ru/)\n"
@@ -52,10 +52,6 @@ msgstr "Настроить содержимое "
 msgid "Content rule settings updated."
 msgstr "Обновлены настройки содержимого."
 
-#: senaite/core/browser/dexterity/templates/container.pt:29
-msgid "Contents"
-msgstr "Содержание"
-
 #: senaite/core/browser/contentrules/templates/controlpanel.pt:52
 msgid "Disable globally"
 msgstr "Выключить глобально"
@@ -93,6 +89,12 @@ msgstr "Перейдите на страницу обновления"
 msgid "Home"
 msgstr "Главная страница"
 
+#: senaite/core/browser/dexterity/templates/macros.pt:26
+#: senaite/core/browser/portlets/templates/manage-contextual.pt:38
+#: senaite/core/browser/sharing/templates/client_sharing.pt:22
+msgid "Info"
+msgstr ""
+
 #: senaite/core/browser/quickinstaller/templates/quickinstaller.pt:132
 msgid "Install"
 msgstr "Установить"
@@ -104,6 +106,10 @@ msgstr "Войти"
 #: senaite/core/profiles/default/actions.xml
 msgid "Log out"
 msgstr "Выйти"
+
+#: senaite/core/skins/senaite_templates/senaite_widgets/recordswidget.pt:275
+msgid "More"
+msgstr ""
 
 #: senaite/core/browser/portlets/templates/edit-manager-macros.pt:79
 msgid "Move down"
@@ -129,9 +135,17 @@ msgstr "Выкл."
 msgid "On"
 msgstr "Вкл."
 
+#: senaite/core/profiles/default/actions.xml
+msgid "Register"
+msgstr ""
+
 #: senaite/core/profiles/default/registry.xml
 msgid "Relative URL for the SENAITE toolbar logo"
 msgstr "Относительный URL-адрес для логотипа панели инструментов SENAITE"
+
+#: senaite/core/profiles/default/actions.xml
+msgid "Search"
+msgstr ""
 
 #: senaite/core/browser/sharing/templates/client_sharing.pt:67
 msgid "Search for user or group"
@@ -231,6 +245,11 @@ msgstr "Пользователи и группы"
 #: senaite/core/browser/controlpanel/templates/overview.pt:143
 msgid "WSGI:"
 msgstr "WSGI:"
+
+#: senaite/core/browser/controlpanel/templates/overview.pt:26
+#: senaite/core/browser/quickinstaller/templates/quickinstaller.pt:86
+msgid "Warning"
+msgstr ""
 
 #: senaite/core/browser/contentrules/templates/controlpanel.pt:53
 msgid "Whether or not content rules should be disabled globally. If this is selected, no rules will be executed anywhere in the portal."
