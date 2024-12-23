@@ -24,6 +24,7 @@ from Acquisition import aq_parent
 from bika.lims import api
 from bika.lims.api import UID_CATALOG
 from bika.lims.api.snapshot import disable_snapshots
+from bika.lims.browser.fields.uidreferencefield import get_backreferences
 from bika.lims.interfaces.analysis import IRequestAnalysis
 from bika.lims.utils import tmpID
 from plone.dexterity.fti import DexterityFTI
@@ -45,6 +46,7 @@ from senaite.core.catalog import SENAITE_CATALOG
 from senaite.core.catalog.base_catalog import BaseCatalog
 from senaite.core.config import PROJECTNAME as product
 from senaite.core.interfaces import IContentMigrator
+from senaite.core.schema.uidreferencefield import get_backref_storage
 from senaite.core.setuphandlers import add_senaite_setup_items
 from senaite.core.setuphandlers import setup_core_catalogs
 from senaite.core.setuphandlers import setup_other_catalogs
@@ -61,6 +63,7 @@ from senaite.core.workflow import LABCONTACT_WORKFLOW
 from senaite.core.schema.addressfield import BILLING_ADDRESS
 from senaite.core.schema.addressfield import PHYSICAL_ADDRESS
 from senaite.core.schema.addressfield import POSTAL_ADDRESS
+from persistent.list import PersistentList
 from zope.component import getMultiAdapter
 
 version = "2.6.0"  # Remember version number in metadata.xml and setup.py
@@ -2770,7 +2773,6 @@ def migrate_calculation_to_dx(src, destination=None):
     target.setFormula(src.getFormula())
     target.setTestParameters(src.getTestParameters() or [])
     target.setTestResult(src.getTestResult() or "")
-    target.setDependentServices(src.getDependentServices() or [])
 
     # Migrate the contents from AT to DX
     migrator = getMultiAdapter(
@@ -2781,6 +2783,15 @@ def migrate_calculation_to_dx(src, destination=None):
 
     # copy the UID
     migrator.copy_uid(src, target)
+
+    # create backrefs storage for newly created calculation and
+    # move there uids of AnalisysServiced dependendent on this calc
+    key = "CalculationDependentServices"
+    src_backreferences = get_backreferences(src, relationship=key)
+    target_storage = get_backref_storage(target)
+    target_backrefs = target_storage[key] = PersistentList()
+    for ref in src_backreferences:
+        target_backrefs.append(api.get_uid(ref))
 
     # copy auditlog
     migrator.copy_snapshots(src, target)
