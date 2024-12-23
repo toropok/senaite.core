@@ -89,6 +89,11 @@ class IGPSCoordinatesField(IDict):
     """
 
 
+class ISelectOtherField(INativeString):
+    """Senaite SelectOther field
+    """
+
+
 class IInterimsField(IList):
     """Senaite Interims field field
     """
