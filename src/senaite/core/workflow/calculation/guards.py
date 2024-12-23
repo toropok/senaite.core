@@ -43,7 +43,7 @@ def guard_deactivate(calculation):
     brains = api.search(query, SETUP_CATALOG)
     for brain in brains:
         service = api.get_object(brain)
-        calc = service.getCalculation()
-        if calc and calc.UID() == calculation.UID():
+        calc_uid = service.getRawCalculation()
+        if calc_uid == calculation.UID():
             return False
     return True
