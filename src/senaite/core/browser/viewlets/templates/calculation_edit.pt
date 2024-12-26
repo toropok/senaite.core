@@ -1,1 +1,0 @@
-<script tal:attributes="src string:${view/site_url}/++plone++senaite.core.static/js/senaite.core.calculation.edit.js"></script>
