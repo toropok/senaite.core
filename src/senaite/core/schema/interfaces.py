@@ -94,6 +94,6 @@ class ISelectOtherField(INativeString):
     """
 
 
-class IInterimsField(IList):
+class IInterimFields(IList):
     """Senaite Interims field field
     """

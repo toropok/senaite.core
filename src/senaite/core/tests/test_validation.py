@@ -28,7 +28,7 @@ from Products.validation import validation as validationService
 from senaite.core.content.calculation import ICalculationSchema
 from senaite.core.tests.base import DataTestCase
 from senaite.core.validators.formula import FormulaValidator
-from senaite.core.validators.interimsfield import InterimsFieldValidator
+from senaite.core.validators.interimfields import InterimsFieldValidator
 from z3c.form.error import MultipleErrors
 
 

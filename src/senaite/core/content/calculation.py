@@ -37,10 +37,10 @@ from senaite.core.content.base import Container
 from senaite.core.interfaces import ICalculation
 from senaite.core.schema.fields import DataGridField
 from senaite.core.schema.fields import DataGridRow
-from senaite.core.schema.interimsfield import InterimsField
+from senaite.core.schema.interimfields import InterimFields
 from senaite.core.validators.formula import FormulaValidator
-from senaite.core.validators.interimsfield import InterimsFieldValidator
-from senaite.core.validators.interimsfield import InterimsFieldValidationErrorView
+from senaite.core.validators.interimfields import InterimFieldsValidator
+from senaite.core.validators.interimfields import InterimFieldsValidationErrorView
 from senaite.core.schema.uidreferencefield import UIDReferenceField
 from senaite.core.z3cform.widgets.datagrid import DataGridWidgetFactory
 from zope import component
@@ -205,13 +205,13 @@ class ICalculationSchema(model.Schema):
     )
 
     directives.widget(
-        "interims",
+        "interim_fields",
         DataGridWidgetFactory,
         allow_insert=True,
         allow_delete=True,
         allow_reorder=True,
         auto_append=True)
-    interims = InterimsField(
+    interim_fields = InterimFields(
         title=_(u"label_calculation_interims",
                 default=u"Calculation Interim Fields"),
         description=_(u"description_calculation_imports",
@@ -340,7 +340,7 @@ class Calculation(Container):
 
     @security.protected(permissions.View)
     def getInterimFields(self):
-        accessor = self.accessor("interims")
+        accessor = self.accessor("interim_fields")
         return accessor(self) or []
 
     @security.protected(permissions.ModifyPortalContent)
@@ -376,7 +376,7 @@ class Calculation(Container):
             if new_interims:
                 service.setInterimFields(service_interims)
 
-        mutator = self.mutator("interims")
+        mutator = self.mutator("interim_fields")
         mutator(self, new_value)
 
     def getCalculationDependencies(self, flat=False, deps=None):
@@ -585,18 +585,20 @@ class Calculation(Container):
 
 
 validator.WidgetsValidatorDiscriminators(
-     FormulaValidator, schema=util.getSpecification(ICalculationSchema, force=True))
+    FormulaValidator,
+    schema=util.getSpecification(ICalculationSchema,
+                                 force=True))
 component.provideAdapter(FormulaValidator)
 
 validator.WidgetValidatorDiscriminators(
-    InterimsFieldValidator,
-    field=ICalculationSchema["interims"],
+    InterimFieldsValidator,
+    field=ICalculationSchema["interim_fields"],
 )
-component.provideAdapter(InterimsFieldValidator)
+component.provideAdapter(InterimFieldsValidator)
 
 error.ErrorViewDiscriminators(
-    InterimsFieldValidationErrorView,
+    InterimFieldsValidationErrorView,
     error=error.MultipleErrors,
-    field=ICalculationSchema["interims"],
+    field=ICalculationSchema["interim_fields"],
 )
-component.provideAdapter(InterimsFieldValidationErrorView)
+component.provideAdapter(InterimFieldsValidationErrorView)

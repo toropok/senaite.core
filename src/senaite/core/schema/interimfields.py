@@ -24,13 +24,13 @@ from bika.lims import senaiteMessageFactory as _
 
 from senaite.core.schema.fields import DataGridField
 from senaite.core.schema.fields import DataGridRow
-from senaite.core.schema.interfaces import IInterimsField
+from senaite.core.schema.interfaces import IInterimFields
 from zope import schema
 from zope.interface import implementer
 from zope.interface import Interface
 
 
-class IInterimRow(Interface):
+class IInterimField(Interface):
 
     directives.widget("keyword", style=u"width: 150px!important;")
     keyword = schema.TextLine(
@@ -38,7 +38,7 @@ class IInterimRow(Interface):
             u"label_interim_keyword",
             default=u"Keyword"
         ),
-        required=False,
+        required=True,
         default=u""
     )
 
@@ -133,12 +133,12 @@ class IInterimRow(Interface):
     )
 
 
-@implementer(IInterimsField)
-class InterimsField(DataGridField):
+@implementer(IInterimFields)
+class InterimFields(DataGridField):
 
-    value_type = DataGridRow(schema=IInterimRow)
+    value_type = DataGridRow(schema=IInterimField)
 
     def __init__(self, **kwargs):
         default = kwargs.get("default")
         kwargs["default"] = default or []
-        super(InterimsField, self).__init__(**kwargs)
+        super(InterimFields, self).__init__(**kwargs)

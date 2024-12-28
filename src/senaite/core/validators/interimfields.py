@@ -247,7 +247,7 @@ def row_wrapper(row_idx, validators):
     return validate
 
 
-class InterimsFieldValidator(validator.SimpleFieldValidator):
+class InterimFieldsValidator(validator.SimpleFieldValidator):
 
     def validate(self, value):
 
@@ -310,10 +310,10 @@ class InterimErrorViewSnippet(ErrorViewSnippet):
         pass
 
 
-class InterimsFieldValidationErrorView(MultipleErrorViewSnippet):
+class InterimFieldsValidationErrorView(MultipleErrorViewSnippet):
 
     def __init__(self, error, request, widget, field, form, content):
-        super(InterimsFieldValidationErrorView, self).__init__(
+        super(InterimFieldsValidationErrorView, self).__init__(
             error, request, widget, field, form, content)
         err_snippet = partial(InterimErrorViewSnippet,
                               error, request, widget, field, form)

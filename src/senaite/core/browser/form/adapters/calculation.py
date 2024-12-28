@@ -19,7 +19,6 @@
 # Some rights reserved, see README and LICENSE.
 
 import re
-from functools import reduce
 
 from bika.lims import api
 from bika.lims.api.analysisservice import get_by_keyword
@@ -43,12 +42,6 @@ FIELD_IMPORTS_FUNC = "form.widgets.imports.{}.widgets.function"
 FIELD_INTERIM_VALUE = "form.widgets.interims.{}.widgets.value"
 
 
-def deep_get(dictionary, *keys):
-    def _inner_get(d, key):
-        return d.get(key, None) if isinstance(d, dict) else None
-    return reduce(lambda d, key: _inner_get(d, key), keys, dictionary)
-
-
 class EditForm(EditFormAdapterBase):
     """Edit form adapter for Calculation
     """
@@ -66,26 +59,15 @@ class EditForm(EditFormAdapterBase):
         return self.data
 
     def modified(self, data):
-        errors = FormulaValidator(
-            self.context,
-            self.request,
-            None,
-            ICalculationSchema,
-            None).validate(
-                {"formula": deep_get(data, "form", FIELD_FORMULA) or "",
-                 "interims":
-                 [{"keyword": i} for i in self.get_interim_keywords(data)]})
+        errors = self.validate_formula(data)
         if errors:
             err_msg = "; ".join([err.message for err in errors])
             self.add_error_field(FIELD_FORMULA, err_msg)
             return self.data
 
+        # clean prev error messages if validation passed
         self.add_error_field(FIELD_FORMULA, "")
-        keywords = self.process_keywords(data)
-        self.add_update_field("form.widgets.raw_test_keywords",
-                              ",".join(keywords.keys()))
-
-        return self.data
+        return self.update_form(data)
 
     def callback(self, data):
         name = data.get("name")
@@ -102,19 +84,8 @@ class EditForm(EditFormAdapterBase):
                               ",".join(keywords.keys()))
         return self.data
 
-    def calculate_result(self, data, parameters=None, imports=None):
-        form = data.get("form")
-        formula = " ".join(form.get(FIELD_FORMULA, "").splitlines())
-        if parameters is None:
-            parameters = self.get_test_keywords(data)
-        if imports is None:
-            imports = self.get_imports(data)
-        result = calculate_formula(formula, parameters, imports)
-        self.add_update_field(FIELD_TEST_RESULT, result)
-        return self.data
-
     def process_keywords(self, data):
-        interim_keywords = self.get_interim_keywords(data)
+        interim_keywords = self.get_interimfields_keywords(data)
         formula_keywords = self.process_formula(data, interim_keywords)
         test_keywords = self.get_test_keywords(data)
 
@@ -145,13 +116,14 @@ class EditForm(EditFormAdapterBase):
         return self.data
 
     def process_formula(self, data, interim_keywords):
-        formula = deep_get(data, "form", FIELD_FORMULA)
+        form = data.get("form")
+        formula = form.get(FIELD_FORMULA) or ""
         formula_keywords = self.parse_formula(formula)
         result_keywords = {kw: interim_keywords.get(
             kw, "") for kw in formula_keywords}
         return result_keywords
 
-    def get_interim_keywords(self, data):
+    def get_interimfields_keywords(self, data):
         form = data.get("form")
         keywords = {}
         for k, v in form.items():
@@ -194,3 +166,25 @@ class EditForm(EditFormAdapterBase):
         form = data.get("form")
         positions = [k for k in form.keys() if test_keyword_regex.search(k)]
         return len(positions)
+
+    def get_interim_fields(self, data):
+        return [{"keyword": i} for i in self.get_interimfields_keywords(data)]
+
+    def validate_formula(self, data):
+        form = data.get("form")
+        formula = form.get(FIELD_FORMULA) or ""
+        validator = FormulaValidator(
+            self.context, self.request, None, ICalculationSchema, None)
+        return validator.validate({"formula": formula,
+                                   "interims": self.get_interim_fields(data)})
+
+    def calculate_result(self, data, parameters=None, imports=None):
+        form = data.get("form")
+        formula = " ".join(form.get(FIELD_FORMULA, "").splitlines())
+        if parameters is None:
+            parameters = self.get_test_keywords(data)
+        if imports is None:
+            imports = self.get_imports(data)
+        result = calculate_formula(formula, parameters, imports)
+        self.add_update_field(FIELD_TEST_RESULT, result)
+        return self.data
