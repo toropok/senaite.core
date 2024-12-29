@@ -28,7 +28,7 @@ from Products.validation import validation as validationService
 from senaite.core.content.calculation import ICalculationSchema
 from senaite.core.tests.base import DataTestCase
 from senaite.core.validators.formula import FormulaValidator
-from senaite.core.validators.interimfields import InterimsFieldValidator
+from senaite.core.validators.interimfields import InterimFieldsValidator
 from z3c.form.error import MultipleErrors
 
 
@@ -89,12 +89,12 @@ class Tests(DataTestCase):
         key = calc1.id + 'interims'
 
         interim_fields = []
-        self.portal.REQUEST.form['interims'] = interim_fields
+        self.portal.REQUEST.form['interim_fields'] = interim_fields
         self.portal.REQUEST['validated'] = None
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
         self.assertIsNone(
-            InterimsFieldValidator(
+            InterimFieldsValidator(
                 calc1, self.portal.REQUEST, None, None, None
             ).validate(interim_fields))
 
@@ -103,13 +103,13 @@ class Tests(DataTestCase):
                            'unit': '',
                            'default': ''},
                           ]
-        self.portal.REQUEST.form['interims'] = interim_fields
+        self.portal.REQUEST.form['interim_fields'] = interim_fields
         self.portal.REQUEST['validated'] = None
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
 
         with self.assertRaises(MultipleErrors) as arc:
-            InterimsFieldValidator(
+            InterimFieldsValidator(
                 calc1, self.portal.REQUEST, None, None, None
             ).validate(interim_fields)
         self.assertEqual(
@@ -121,12 +121,12 @@ class Tests(DataTestCase):
              'unit': '',
              'default': ''},
             {'keyword': 'TV', 'title': 'Titration Volume', 'unit': '', 'default': ''}]
-        self.portal.REQUEST.form['interims'] = interim_fields
+        self.portal.REQUEST.form['interim_fields'] = interim_fields
         self.portal.REQUEST['validated'] = None
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
         with self.assertRaises(MultipleErrors) as arc:
-            InterimsFieldValidator(
+            InterimFieldsValidator(
                 calc1, self.portal.REQUEST, None, None, None
             ).validate(interim_fields)
         self.assertEqual(str(
@@ -135,12 +135,12 @@ class Tests(DataTestCase):
         interim_fields = [
             {'keyword': 'GM', 'title': 'XXX', 'unit': '', 'default': ''},
             {'keyword': 'TV', 'title': 'Titration Volume', 'unit': '', 'default': ''}]
-        self.portal.REQUEST.form['interims'] = interim_fields
+        self.portal.REQUEST.form['interim_fields'] = interim_fields
         self.portal.REQUEST['validated'] = None
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
         with self.assertRaises(MultipleErrors) as arc:
-            InterimsFieldValidator(
+            InterimFieldsValidator(
                 calc1, self.portal.REQUEST, None, None, None
             ).validate(interim_fields)
         self.assertEqual(str(
@@ -152,12 +152,12 @@ class Tests(DataTestCase):
              'unit': '',
              'default': ''},
             {'keyword': 'TV', 'title': 'Titration Volume 1', 'unit': '', 'default': ''}]
-        self.portal.REQUEST.form['interims'] = interim_fields
+        self.portal.REQUEST.form['interim_fields'] = interim_fields
         self.portal.REQUEST['validated'] = None
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
         with self.assertRaises(MultipleErrors) as arc:
-            InterimsFieldValidator(
+            InterimFieldsValidator(
                 calc1, self.portal.REQUEST, None, None, None
             ).validate(interim_fields)
         self.assertEqual(
@@ -169,12 +169,12 @@ class Tests(DataTestCase):
              'unit': '',
              'default': ''},
             {'keyword': 'TF', 'title': 'Titration Volume', 'unit': '', 'default': ''}]
-        self.portal.REQUEST.form['interims'] = interim_fields
+        self.portal.REQUEST.form['interim_fields'] = interim_fields
         self.portal.REQUEST['validated'] = None
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
         with self.assertRaises(MultipleErrors) as arc:
-            InterimsFieldValidator(
+            InterimFieldsValidator(
                 calc1, self.portal.REQUEST, None, None, None
             ).validate(interim_fields)
         self.assertEqual(
@@ -186,12 +186,12 @@ class Tests(DataTestCase):
              'unit': '',
              'default': ''},
             {'keyword': 'TF', 'title': 'Titration Factor', 'unit': '', 'default': ''}]
-        self.portal.REQUEST.form['interims'] = interim_fields
+        self.portal.REQUEST.form['interim_fields'] = interim_fields
         self.portal.REQUEST['validated'] = None
         if key in self.portal.REQUEST:
             self.portal.REQUEST[key] = False
         with self.assertRaises(MultipleErrors) as arc:
-            InterimsFieldValidator(
+            InterimFieldsValidator(
                 calc1, self.portal.REQUEST, None, None, None
             ).validate(interim_fields)
         self.assertEqual(
@@ -285,7 +285,7 @@ class Tests(DataTestCase):
              'unit': '',
              'default': ''},
             {'keyword': 'TF', 'title': 'Titration Factor', 'unit': '', 'default': ''}]
-        self.portal.REQUEST.form['interims'] = interim_fields
+        self.portal.REQUEST.form['interim_fields'] = interim_fields
         self.portal.REQUEST.form['formula'] = "[TV] * [TF] * [Wrong]"
         self.assertEqual(
             FormulaValidator(

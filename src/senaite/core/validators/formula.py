@@ -32,7 +32,7 @@ from z3c.form import validator
 def no_wildcards_for_interims():
     def validate(data):
         interim_keywords = filter(
-            None, map(lambda i: i.get("keyword"), data['interims'] or []))
+            None, map(lambda i: i.get("keyword"), data['interim_fields'] or []))
         keysandwildcards = map(
             lambda k: k.split(".", 1),
             filter(
@@ -40,10 +40,10 @@ def no_wildcards_for_interims():
                 re.compile(r"\[([^\]]+)\]").findall(data['formula'])))
         errwilds = [k[1] for k in keysandwildcards if k[0] in interim_keywords]
         if len(errwilds) > 0:
-            return fail("no_wildcards_interims",
+            return fail("no_wildcards_",
                         translate(
-                            _(u"no_wildcards_interims_error",
-                                default=u"Wildcards for interims are not "
+                            _(u"no_wildcards__error",
+                                default=u"Wildcards for  are not "
                                         u"allowed: ${wildcards}",
                                 mapping={"wildcards": ", ".join(errwilds)}))
                         )
@@ -54,7 +54,7 @@ def no_wildcards_for_interims():
 def invalid_wildcards_check():
     def validate(data):
         interim_keywords = filter(
-            None, map(lambda i: i.get("keyword"), data['interims'] or []))
+            None, map(lambda i: i.get("keyword"), data['interim_fields'] or []))
         keysandwildcards = map(
             lambda k: k.split(".", 1),
             filter(
@@ -79,7 +79,7 @@ def invalid_keyword():
     def validate(data):
         keywords = re.compile(r"\[([^\.^\]]+)\]").findall(data['formula'])
         interim_keywords = filter(
-            None, map(lambda i: i.get("keyword"), data['interims'] or []))
+            None, map(lambda i: i.get("keyword"), data['interim_fields'] or []))
         as_keywords = [k for k in keywords if k not in interim_keywords]
         services = get_by_keyword(as_keywords)
         if len(as_keywords) != len(services):
@@ -108,7 +108,9 @@ class FormulaValidator(validator.InvariantsValidator):
 
     def validateObject(self, obj):
         errors = super(FormulaValidator, self).validateObject(obj)
-        data = {"formula": obj.formula, "interims": obj.interims}
+        formula = obj.formula if hasattr(obj, 'formula') else ""
+        ifields = obj.interim_fields if hasattr(obj, 'interim_fields') else []
+        data = dict(formula=formula, interim_fields=ifields)
 
         try:
             result = ValidatedData(data).run(*self._validators)

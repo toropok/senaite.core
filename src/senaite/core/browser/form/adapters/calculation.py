@@ -27,19 +27,19 @@ from senaite.core.content.calculation import calculate_formula
 from senaite.core.content.calculation import ICalculationSchema
 from senaite.core.validators.formula import FormulaValidator
 
-interim_keyword_regex = re.compile(r"interims\.(\d+)\.widgets\.keyword$")
-imports_module_regex = re.compile(r"imports\.(\d+)\.widgets\.module$")
-test_keyword_regex = re.compile(r"test_parameters\.(\d+)\.widgets\.keyword$")
-test_value_regex = re.compile(r"test_parameters\.(\d+)\.widgets\.value$")
-formula_regex = re.compile(r"\[[^\]]*\]")
+FORMULA_RX = re.compile(r"\[[^\]]*\]")
+INTERIM_KEYWORD_RX = re.compile(r"interim_fields\.(\d+)\.widgets\.keyword$")
+IMPORT_MODULES_RX = re.compile(r"imports\.(\d+)\.widgets\.module$")
+TEST_KEYWORDS_RX = re.compile(r"test_parameters\.(\d+)\.widgets\.keyword$")
+TEST_VALUE_RX = re.compile(r"test_parameters\.(\d+)\.widgets\.value$")
 
-FIELD_FORMULA = "form.widgets.formula"
-FIELD_TEST_RESULT = "form.widgets.test_result"
 FIELD_DEPENDENT_SERVICES = "form.widgets.dependent_services"
+FIELD_FORMULA = "form.widgets.formula"
+FIELD_IMPORTS_FUNC = "form.widgets.imports.{}.widgets.function"
+FIELD_INTERIM_VALUE = "form.widgets.interim_fields.{}.widgets.value"
+FIELD_TEST_RESULT = "form.widgets.test_result"
 FIELD_TEST_KEYWORD = "form.widgets.test_parameters.{}.widgets.keyword"
 FIELD_TEST_VALUE = "form.widgets.test_parameters.{}.widgets.value"
-FIELD_IMPORTS_FUNC = "form.widgets.imports.{}.widgets.function"
-FIELD_INTERIM_VALUE = "form.widgets.interims.{}.widgets.value"
 
 
 class EditForm(EditFormAdapterBase):
@@ -127,7 +127,7 @@ class EditForm(EditFormAdapterBase):
         form = data.get("form")
         keywords = {}
         for k, v in form.items():
-            interim_match = interim_keyword_regex.search(k)
+            interim_match = INTERIM_KEYWORD_RX.search(k)
             if interim_match:
                 idx = interim_match.group(1)
                 value = form.get(FIELD_INTERIM_VALUE.format(idx))
@@ -135,14 +135,14 @@ class EditForm(EditFormAdapterBase):
         return keywords
 
     def parse_formula(self, formula):
-        keywords = formula_regex.findall(formula)
+        keywords = FORMULA_RX.findall(formula)
         return set(map(lambda kw: re.sub(r"[\[\]]", "", kw), keywords))
 
     def get_test_keywords(self, data):
         form = data.get("form")
         keywords = {}
         for k, v in form.items():
-            test_match = test_keyword_regex.search(k)
+            test_match = TEST_KEYWORDS_RX.search(k)
             if test_match:
                 idx = test_match.group(1)
                 value = form.get(FIELD_TEST_VALUE.format(idx))
@@ -153,7 +153,7 @@ class EditForm(EditFormAdapterBase):
         form = data.get("form")
         imports = []
         for k, v in form.items():
-            module_match = imports_module_regex.search(k)
+            module_match = IMPORT_MODULES_RX.search(k)
             if module_match:
                 idx = module_match.group(1)
                 imports.append({
@@ -164,7 +164,7 @@ class EditForm(EditFormAdapterBase):
 
     def get_count_test_rows(self, data):
         form = data.get("form")
-        positions = [k for k in form.keys() if test_keyword_regex.search(k)]
+        positions = [k for k in form.keys() if TEST_KEYWORDS_RX.search(k)]
         return len(positions)
 
     def get_interim_fields(self, data):
@@ -173,10 +173,11 @@ class EditForm(EditFormAdapterBase):
     def validate_formula(self, data):
         form = data.get("form")
         formula = form.get(FIELD_FORMULA) or ""
+        ifields = self.get_interim_fields(data)
         validator = FormulaValidator(
             self.context, self.request, None, ICalculationSchema, None)
         return validator.validate({"formula": formula,
-                                   "interims": self.get_interim_fields(data)})
+                                   "interim_fields": ifields})
 
     def calculate_result(self, data, parameters=None, imports=None):
         form = data.get("form")

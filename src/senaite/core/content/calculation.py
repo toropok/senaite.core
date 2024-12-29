@@ -255,21 +255,25 @@ class ICalculationSchema(model.Schema):
     )
 
     formula = schema.Text(
-        title=_(u"label_calculation_formula",
-                default=u"Calculation Formula"),
-        description=_(u"description_calculation_formula",
-                      default=u"<p>The formula you type here will be "
-                      u"dynamically calculated be dynamically calculated when "
-                      u"an analysis using this calculation is displayed.</p>"
-                      u"<p>To enter a Calculation, use standard maths "
-                      u"operators, + - * / ( ), and all keywords available, "
-                      u"both from other Analysis Services and the Interim "
-                      u"Fields specified here, as variables. Enclose them "
-                      u"in square brackets [ ].</p><p>E.g, the calculation "
-                      u"for Total Hardness, the total of Calcium (ppm) and "
-                      u"Magnesium (ppm) ions in water, is entered as [Ca] "
-                      u"+ [Mg], where Ca and Mg are the keywords for "
-                      u"those two Analysis Services.</p>"),
+        title=_(
+            u"label_calculation_formula",
+            default=u"Calculation Formula"
+        ),
+        description=_(
+            u"description_calculation_formula",
+            default=u"<p>The formula you type here will be "
+                    u"dynamically calculated be dynamically calculated when "
+                    u"an analysis using this calculation is displayed.</p>"
+                    u"<p>To enter a Calculation, use standard maths "
+                    u"operators, + - * / ( ), and all keywords available, "
+                    u"both from other Analysis Services and the Interim "
+                    u"Fields specified here, as variables. Enclose them "
+                    u"in square brackets [ ].</p><p>E.g, the calculation "
+                    u"for Total Hardness, the total of Calcium (ppm) and "
+                    u"Magnesium (ppm) ions in water, is entered as [Ca] "
+                    u"+ [Mg], where Ca and Mg are the keywords for "
+                    u"those two Analysis Services.</p>"
+        ),
         required=True,
     )
 
@@ -281,14 +285,18 @@ class ICalculationSchema(model.Schema):
         allow_reorder=False,
         auto_append=True)
     test_parameters = DataGridField(
-        title=_(u"label_calculation_test_params",
-                default=u"Test Parameters"),
-        description=_(u"description_calculation_test_params",
-                      default=u"To test the calculation, enter values here "
-                      u"for all calculation parameters.  This includes "
-                      u"Interim fields defined above, as well as any services "
-                      u"that this calculation depends on to "
-                      u"calculate results."),
+        title=_(
+            u"label_calculation_test_params",
+            default=u"Test Parameters"
+        ),
+        description=_(
+            u"description_calculation_test_params",
+            default=u"To test the calculation, enter values here "
+                    u"for all calculation parameters.  This includes "
+                    u"Interim fields defined above, as well as any services "
+                    u"that this calculation depends on to "
+                    u"calculate results."
+        ),
         value_type=DataGridRow(schema=ITestParameterRecord),
         required=False,
         default=[]
