@@ -33,13 +33,14 @@ IMPORT_MODULES_RX = re.compile(r"imports\.(\d+)\.widgets\.module$")
 TEST_KEYWORDS_RX = re.compile(r"test_parameters\.(\d+)\.widgets\.keyword$")
 TEST_VALUE_RX = re.compile(r"test_parameters\.(\d+)\.widgets\.value$")
 
-FIELD_DEPENDENT_SERVICES = "form.widgets.dependent_services"
 FIELD_FORMULA = "form.widgets.formula"
-FIELD_IMPORTS_FUNC = "form.widgets.imports.{}.widgets.function"
-FIELD_INTERIM_VALUE = "form.widgets.interim_fields.{}.widgets.value"
 FIELD_TEST_RESULT = "form.widgets.test_result"
+FIELD_DEPENDENT_SERVICES = "form.widgets.dependent_services"
+FIELD_RAW_TEST_KEYWORDS = "form.widgets.raw_test_keywords"
 FIELD_TEST_KEYWORD = "form.widgets.test_parameters.{}.widgets.keyword"
 FIELD_TEST_VALUE = "form.widgets.test_parameters.{}.widgets.value"
+FIELD_IMPORTS_FUNC = "form.widgets.imports.{}.widgets.function"
+FIELD_INTERIM_VALUE = "form.widgets.interim_fields.{}.widgets.value"
 
 
 class EditForm(EditFormAdapterBase):
@@ -79,75 +80,58 @@ class EditForm(EditFormAdapterBase):
         return method(data)
 
     def update_form(self, data):
-        keywords = self.process_keywords(data)
-        self.add_update_field("form.widgets.raw_test_keywords",
-                              ",".join(keywords.keys()))
-        return self.data
-
-    def process_keywords(self, data):
-        interim_keywords = self.get_interimfields_keywords(data)
-        formula_keywords = self.process_formula(data, interim_keywords)
-        test_keywords = self.get_test_keywords(data)
-
+        interim_kws = self.get_interimfields_keywords(data)
+        formula_kws = self.get_formula_keywords(data)
         dep_services_uids = map(
             api.get_uid,
             get_by_keyword(
-                [k for k in formula_keywords if k not in interim_keywords]))
+                map(
+                    lambda s: s.partition(".")[0],
+                    [k for k in formula_kws if k not in interim_kws])))
         self.add_update_field(FIELD_DEPENDENT_SERVICES, dep_services_uids)
-
-        return self.update_keywords_value(formula_keywords, test_keywords)
-
-    def update_keywords_value(self, formula_keywords, test_keywords):
-        for kw in formula_keywords.keys():
-            if kw in test_keywords.keys():
-                formula_keywords[kw] = test_keywords.get(kw)
-        return formula_keywords
-
-    def update_test_parameters(self, data):
-        keywords = self.process_keywords(data)
-        items = keywords.items()
-        kws = []
-        for index, item in enumerate(items):
-            kws.append(item[0])
-            self.add_update_field(FIELD_TEST_KEYWORD.format(index), item[0])
-            self.add_update_field(FIELD_TEST_VALUE.format(index), item[1])
-        imports = self.get_imports(data)
-        self.calculate_result(data, parameters=keywords, imports=imports)
+        self.add_update_field(FIELD_RAW_TEST_KEYWORDS, ",".join(formula_kws))
         return self.data
 
-    def process_formula(self, data, interim_keywords):
-        form = data.get("form")
-        formula = form.get(FIELD_FORMULA) or ""
-        formula_keywords = self.parse_formula(formula)
-        result_keywords = {kw: interim_keywords.get(
-            kw, "") for kw in formula_keywords}
-        return result_keywords
-
     def get_interimfields_keywords(self, data):
-        form = data.get("form")
-        keywords = {}
-        for k, v in form.items():
-            interim_match = INTERIM_KEYWORD_RX.search(k)
-            if interim_match:
-                idx = interim_match.group(1)
-                value = form.get(FIELD_INTERIM_VALUE.format(idx))
-                keywords.update({v: value})
-        return keywords
+        items = data.get("form", {}).items()
+        return [v for k, v in items if INTERIM_KEYWORD_RX.search(k)]
 
-    def parse_formula(self, formula):
-        keywords = FORMULA_RX.findall(formula)
-        return set(map(lambda kw: re.sub(r"[\[\]]", "", kw), keywords))
+    def get_formula_keywords(self, data):
+        formula = data.get("form").get(FIELD_FORMULA, "")
+        keywords = map(lambda kw: kw.strip("[]"),
+                       FORMULA_RX.findall(formula))
+        return list(set(keywords))
 
-    def get_test_keywords(self, data):
+    def update_test_parameters(self, data):
+        formula = " ".join(data.get("form").get(
+            FIELD_FORMULA, "").splitlines())
+        formula_kws = self.get_formula_keywords(data)
+        old_params = self.get_test_parameters(data)
+        new_params = {}
+        for index, kw in enumerate(formula_kws):
+            param_name = kw
+            param_value = old_params.get(kw) or ""
+            new_params.update({param_name: param_value})
+            self.add_update_field(FIELD_TEST_KEYWORD.format(index), param_name)
+            self.add_update_field(FIELD_TEST_VALUE.format(index), param_value)
+
+        # recalculate and update result field
+        imports = self.get_imports(data)
+        result = calculate_formula(formula, new_params, imports)
+        self.add_update_field(FIELD_TEST_RESULT, result)
+
+        return self.data
+
+    def get_test_parameters(self, data):
         form = data.get("form")
-        keywords = {}
+        params = {}
         for k, v in form.items():
             test_match = TEST_KEYWORDS_RX.search(k)
             if test_match:
                 idx = test_match.group(1)
                 value = form.get(FIELD_TEST_VALUE.format(idx))
-                keywords.update({v: value})
-        return keywords
+                params.update({v: value})
+        return params
 
     def get_imports(self, data):
         form = data.get("form")
@@ -162,30 +146,11 @@ class EditForm(EditFormAdapterBase):
                 })
         return imports
 
-    def get_count_test_rows(self, data):
-        form = data.get("form")
-        positions = [k for k in form.keys() if TEST_KEYWORDS_RX.search(k)]
-        return len(positions)
-
-    def get_interim_fields(self, data):
-        return [{"keyword": i} for i in self.get_interimfields_keywords(data)]
-
     def validate_formula(self, data):
-        form = data.get("form")
-        formula = form.get(FIELD_FORMULA) or ""
-        ifields = self.get_interim_fields(data)
+        formula = data.get("form").get(FIELD_FORMULA) or ""
+        fields = [{"keyword": k}
+                  for k in self.get_interimfields_keywords(data)]
         validator = FormulaValidator(
             self.context, self.request, None, ICalculationSchema, None)
         return validator.validate({"formula": formula,
-                                   "interim_fields": ifields})
-
-    def calculate_result(self, data, parameters=None, imports=None):
-        form = data.get("form")
-        formula = " ".join(form.get(FIELD_FORMULA, "").splitlines())
-        if parameters is None:
-            parameters = self.get_test_keywords(data)
-        if imports is None:
-            imports = self.get_imports(data)
-        result = calculate_formula(formula, parameters, imports)
-        self.add_update_field(FIELD_TEST_RESULT, result)
-        return self.data
+                                   "interim_fields": fields})

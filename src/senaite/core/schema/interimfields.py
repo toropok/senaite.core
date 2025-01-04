@@ -48,7 +48,7 @@ class IInterimField(Interface):
             u"label_interim_title",
             default=u"Field title"
         ),
-        required=False,
+        required=True,
         default=u""
     )
 
