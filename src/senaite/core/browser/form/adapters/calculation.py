@@ -103,8 +103,7 @@ class EditForm(EditFormAdapterBase):
         return list(set(keywords))
 
     def update_test_parameters(self, data):
-        formula = " ".join(data.get("form").get(
-            FIELD_FORMULA, "").splitlines())
+        formula = data.get("form").get(FIELD_FORMULA, "")
         formula_kws = self.get_formula_keywords(data)
         old_params = self.get_test_parameters(data)
         new_params = {}

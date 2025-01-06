@@ -22,6 +22,7 @@ import importlib
 import inspect
 import math
 import re
+import string
 
 from AccessControl import ClassSecurityInfo
 from bika.lims import api
@@ -122,12 +123,33 @@ def getModuleMember(dotted_name, member):
     return members.get(member)
 
 
+class FormulaFormatter(string.Formatter):
+    """ Helper class to remove spaces, tabs and etc., replace sqare brackets 
+        and correctly substitute dotted parameters (e.g. AnalysisService wildcards)
+    """
+
+    def __init__(self):
+        super(FormulaFormatter, self).__init__()
+        self.trans = {ord(s): api.safe_unicode(d) for s, d in zip("[]", "{}")}
+        for c in ' \n\t\r':
+            self.trans[ord(c)] = u''
+
+    def format(self, formula, params):
+        formula = formula.translate(self.trans)
+        return self.vformat(formula, [], params)
+
+    def get_field(self, field_name, args, kwargs):
+        return (self.get_value(field_name, args, kwargs), field_name)
+
+
+f_formatter = FormulaFormatter()
+
+
 def calculate_formula(formula="", parameters={}, imports=None):
-    formula = formula.replace("[", "{").replace("]", "}").replace("  ", "")
     result = "Failure"
 
     try:
-        formula = formula.format(**parameters)
+        formula = f_formatter.format(formula, parameters)
         result = eval(formula, getGlobals(imports))
     except TypeError as e:
         # non-numeric arguments in interim mapping?
